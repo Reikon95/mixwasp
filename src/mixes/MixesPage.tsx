@@ -10,8 +10,10 @@ import { Plus } from "lucide-react";
 import { useState } from "react";
 import { Button } from "../client/components/ui/button";
 import { MixWaspLoader } from "../client/components/MixWaspLoader";
+import { useDebounce } from "../client/hooks/useDebounce";
 import { toast } from "../client/hooks/use-toast";
 import { cn } from "../client/utils";
+import { ChartsFilters, type ChartFiltersState } from "./ChartsFilters";
 import { MixFeed } from "./MixFeed";
 import { MixRow } from "./MixRow";
 import type { PopularityPeriod } from "./schemas";
@@ -27,13 +29,20 @@ export function MixesPage() {
   const { data: user } = useAuth();
   const [period, setPeriod] = useState<PopularityPeriod>("week");
   const [togglingMixId, setTogglingMixId] = useState<number | null>(null);
+  const [filters, setFilters] = useState<ChartFiltersState>({ q: "" });
+  const debouncedSearch = useDebounce(filters.q.trim(), 300);
 
   const {
     data: mixes,
     isLoading,
     error,
     refetch,
-  } = useQuery(getPopularMixes, { period });
+  } = useQuery(getPopularMixes, {
+    period,
+    q: debouncedSearch || undefined,
+    genreId: filters.genreId,
+    tagId: filters.tagId,
+  });
 
   const handleToggleFavourite = async (mixId: number) => {
     if (!user) {
@@ -60,7 +69,12 @@ export function MixesPage() {
     }
   };
 
-  const showEmptyPeriod =
+  const hasActiveFilters =
+    debouncedSearch.length > 0 ||
+    filters.genreId !== undefined ||
+    filters.tagId !== undefined;
+
+  const showEmpty =
     !isLoading && mixes !== undefined && mixes.length === 0;
 
   return (
@@ -97,7 +111,7 @@ export function MixesPage() {
         </header>
 
         <div
-          className="border-border mb-6 flex gap-1 overflow-x-auto overflow-y-hidden border-b sm:gap-4"
+          className="border-border mb-4 flex gap-1 overflow-x-auto overflow-y-hidden border-b sm:gap-4"
           role="tablist"
           aria-label="Popularity period"
         >
@@ -120,6 +134,8 @@ export function MixesPage() {
           ))}
         </div>
 
+        <ChartsFilters filters={filters} onChange={setFilters} />
+
         {isLoading && <MixWaspLoader label="Loading mixes" />}
 
         {error && (
@@ -128,22 +144,39 @@ export function MixesPage() {
           </p>
         )}
 
-        {showEmptyPeriod && (
+        {showEmpty && (
           <div className="border-border rounded-md border border-dashed px-6 py-12 text-center">
-            <p className="font-medium">No mixes in this period yet</p>
+            <p className="font-medium">
+              {hasActiveFilters
+                ? "No mixes match these filters"
+                : "No mixes in this period yet"}
+            </p>
             <p className="text-muted-foreground mt-2 text-sm">
-              Switch to All time, or submit a mix to get the charts started.
+              {hasActiveFilters
+                ? "Try clearing filters, switching period, or searching something else."
+                : "Switch to All time, or submit a mix to get the charts started."}
             </p>
             <div className="mt-4 flex flex-wrap items-center justify-center gap-2">
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                onClick={() => setPeriod("all")}
-              >
-                View all time
-              </Button>
-              {user && (
+              {hasActiveFilters ? (
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setFilters({ q: "" })}
+                >
+                  Clear filters
+                </Button>
+              ) : (
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setPeriod("all")}
+                >
+                  View all time
+                </Button>
+              )}
+              {user && !hasActiveFilters && (
                 <Button asChild size="sm">
                   <WaspRouterLink to={routes.SubmitMixRoute.to}>
                     Submit mix

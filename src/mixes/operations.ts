@@ -3,11 +3,14 @@ import { HttpError, prisma } from "wasp/server";
 import type {
   CreateMix,
   GetArtistMixes,
+  GetGenreMixes,
   GetMixLinkPreview,
   GetMyFavouriteMixes,
   GetPopularMixes,
   GetTagMixes,
   SearchArtists,
+  SearchGenres,
+  SearchTags,
   ToggleMixFavourite,
 } from "wasp/server/operations";
 
@@ -19,12 +22,15 @@ import {
   type ArtistMix,
   type ArtistMixesResult,
   type CreateMixInput,
+  type GenreMixesResult,
   type MixLinkPreviewResult,
   type PopularMix,
   type PopularityPeriod,
   type SearchArtistsInput,
+  type SearchNamesInput,
   type TagMixesResult,
   searchArtistsInputSchema,
+  searchNamesInputSchema,
 } from "./schemas";
 import { fetchMixLinkPreview } from "./mixLinkPreview";
 import { isAllowedMixLink } from "./mixEmbed";
@@ -61,7 +67,11 @@ async function findOrCreateGenresByName(names: string[]): Promise<Genre[]> {
       if (existing) {
         return existing;
       }
-      return prisma.genre.create({ data: { name } });
+      return prisma.genre.upsert({
+        where: { name },
+        update: {},
+        create: { name },
+      });
     }),
   );
 }
@@ -75,7 +85,11 @@ async function findOrCreateTagsByName(names: string[]): Promise<Tag[]> {
       if (existing) {
         return existing;
       }
-      return prisma.tag.create({ data: { name } });
+      return prisma.tag.upsert({
+        where: { name },
+        update: {},
+        create: { name },
+      });
     }),
   );
 }
@@ -224,24 +238,55 @@ export const toggleMixFavourite: ToggleMixFavourite<
 const getPopularMixesInputSchema = z.object({
   period: popularityPeriodSchema.default("all"),
   limit: z.number().int().positive().max(100).default(50),
+  genreId: z.number().int().positive().optional(),
+  tagId: z.number().int().positive().optional(),
+  q: z.string().trim().max(120).optional(),
 });
 
 type GetPopularMixesInput = z.input<typeof getPopularMixesInputSchema>;
+
+function buildPopularMixFilters(args: {
+  genreId?: number;
+  tagId?: number;
+  q?: string;
+}) {
+  const query = args.q?.trim();
+  return {
+    ...(args.genreId
+      ? { genres: { some: { id: args.genreId } } }
+      : {}),
+    ...(args.tagId ? { tags: { some: { id: args.tagId } } } : {}),
+    ...(query
+      ? {
+          OR: [
+            { title: { contains: query, mode: "insensitive" as const } },
+            {
+              artist: {
+                name: { contains: query, mode: "insensitive" as const },
+              },
+            },
+            { promoter: { contains: query, mode: "insensitive" as const } },
+          ],
+        }
+      : {}),
+  };
+}
 
 export const getPopularMixes: GetPopularMixes<
   GetPopularMixesInput,
   PopularMix[]
 > = async (rawArgs, context) => {
-  const { period, limit } = ensureArgsSchemaOrThrowHttpError(
-    getPopularMixesInputSchema,
-    rawArgs ?? {},
-  );
+  const { period, limit, genreId, tagId, q } =
+    ensureArgsSchemaOrThrowHttpError(getPopularMixesInputSchema, rawArgs ?? {});
 
   const userId = context.user?.id;
   const since = getPeriodStart(period);
+  const filters = buildPopularMixFilters({ genreId, tagId, q });
+  const hasFilters = Object.keys(filters).length > 0;
 
   if (period === "all") {
     const mixes = await context.entities.Mix.findMany({
+      where: hasFilters ? filters : undefined,
       include: {
         ...mixInclude,
         ...(userId
@@ -270,6 +315,7 @@ export const getPopularMixes: GetPopularMixes<
     });
   }
 
+  // Over-fetch IDs when filters are active so ranking still fills after filtering.
   const grouped = await prisma.mixFavourite.groupBy({
     by: ["mixId"],
     where: {
@@ -277,7 +323,7 @@ export const getPopularMixes: GetPopularMixes<
     },
     _count: { mixId: true },
     orderBy: { _count: { mixId: "desc" } },
-    take: limit,
+    take: hasFilters ? Math.min(limit * 5, 250) : limit,
   });
 
   if (grouped.length === 0) {
@@ -290,7 +336,10 @@ export const getPopularMixes: GetPopularMixes<
   const mixIds = grouped.map((row) => row.mixId);
 
   const mixes = await context.entities.Mix.findMany({
-    where: { id: { in: mixIds } },
+    where: {
+      id: { in: mixIds },
+      ...filters,
+    },
     include: {
       ...mixInclude,
       ...(userId
@@ -324,7 +373,7 @@ export const getPopularMixes: GetPopularMixes<
         hasFavourited: (favourites?.length ?? 0) > 0,
       },
     ];
-  });
+  }).slice(0, limit);
 };
 
 const getArtistMixesInputSchema = z.object({
@@ -370,6 +419,61 @@ export const getArtistMixes: GetArtistMixes<
 
   return {
     artist,
+    mixes: mixes.map((mix) => {
+      const { favourites, ...rest } = mix as typeof mix & {
+        favourites?: { id: string }[];
+      };
+      return {
+        ...rest,
+        hasFavourited: (favourites?.length ?? 0) > 0,
+      } satisfies ArtistMix;
+    }),
+  };
+};
+
+const getGenreMixesInputSchema = z.object({
+  genreId: z.number().int().positive(),
+});
+
+type GetGenreMixesInput = z.infer<typeof getGenreMixesInputSchema>;
+
+export const getGenreMixes: GetGenreMixes<
+  GetGenreMixesInput,
+  GenreMixesResult
+> = async (rawArgs, context) => {
+  const { genreId } = ensureArgsSchemaOrThrowHttpError(
+    getGenreMixesInputSchema,
+    rawArgs,
+  );
+
+  const genre = await context.entities.Genre.findUnique({
+    where: { id: genreId },
+  });
+  if (!genre) {
+    throw new HttpError(404, "Genre not found");
+  }
+
+  const userId = context.user?.id;
+
+  const mixes = await context.entities.Mix.findMany({
+    where: { genres: { some: { id: genreId } } },
+    include: {
+      ...mixInclude,
+      ...(userId
+        ? {
+            favourites: {
+              where: { userId },
+              select: { id: true },
+              take: 1,
+            },
+          }
+        : {}),
+    },
+    orderBy: [{ favouriteCount: "desc" }, { createdAt: "desc" }],
+  });
+
+  return {
+    genre,
     mixes: mixes.map((mix) => {
       const { favourites, ...rest } = mix as typeof mix & {
         favourites?: { id: string }[];
@@ -496,6 +600,42 @@ export const searchArtists: SearchArtists<
   );
 
   return context.entities.Artist.findMany({
+    where: query
+      ? { name: { contains: query, mode: "insensitive" } }
+      : undefined,
+    orderBy: { name: "asc" },
+    take: 15,
+  });
+};
+
+export const searchGenres: SearchGenres<SearchNamesInput, Genre[]> = async (
+  rawArgs,
+  context,
+) => {
+  const { query } = ensureArgsSchemaOrThrowHttpError(
+    searchNamesInputSchema,
+    rawArgs,
+  );
+
+  return context.entities.Genre.findMany({
+    where: query
+      ? { name: { contains: query, mode: "insensitive" } }
+      : undefined,
+    orderBy: { name: "asc" },
+    take: 15,
+  });
+};
+
+export const searchTags: SearchTags<SearchNamesInput, Tag[]> = async (
+  rawArgs,
+  context,
+) => {
+  const { query } = ensureArgsSchemaOrThrowHttpError(
+    searchNamesInputSchema,
+    rawArgs,
+  );
+
+  return context.entities.Tag.findMany({
     where: query
       ? { name: { contains: query, mode: "insensitive" } }
       : undefined,

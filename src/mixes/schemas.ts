@@ -54,6 +54,11 @@ export type TagMixesResult = {
   mixes: ArtistMix[];
 };
 
+export type GenreMixesResult = {
+  genre: Genre;
+  mixes: ArtistMix[];
+};
+
 export type MixLinkPreviewResult = {
   platform: "youtube" | "soundcloud" | "mixcloud";
   title: string | null;
@@ -69,3 +74,7 @@ export const searchArtistsInputSchema = z.object({
 });
 
 export type SearchArtistsInput = z.input<typeof searchArtistsInputSchema>;
+
+export const searchNamesInputSchema = searchArtistsInputSchema;
+
+export type SearchNamesInput = z.input<typeof searchNamesInputSchema>;

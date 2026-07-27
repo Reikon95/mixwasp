@@ -22,6 +22,7 @@ import { useDebounce } from "../client/hooks/useDebounce";
 import { toast } from "../client/hooks/use-toast";
 import { MixEmbedPreview } from "./MixEmbedPreview";
 import { ArtistCombobox } from "./ArtistCombobox";
+import { GenreCombobox, TagCombobox } from "./NameMultiCombobox";
 import { isAllowedMixLink } from "./mixEmbed";
 import {
   createMixInputSchema,
@@ -271,13 +272,16 @@ export function SubmitMixPage() {
                 <FormItem>
                   <FormLabel>Genres (optional)</FormLabel>
                   <FormControl>
-                    <Input
-                      placeholder="House, Techno"
-                      autoComplete="off"
-                      {...field}
+                    <GenreCombobox
+                      value={field.value ?? ""}
+                      onChange={field.onChange}
+                      onBlur={field.onBlur}
+                      disabled={isSubmitting}
                     />
                   </FormControl>
-                  <FormDescription>Comma-separated.</FormDescription>
+                  <FormDescription>
+                    Search existing genres or create new ones.
+                  </FormDescription>
                   <FormMessage />
                 </FormItem>
               )}
@@ -290,13 +294,16 @@ export function SubmitMixPage() {
                 <FormItem>
                   <FormLabel>Tags (optional)</FormLabel>
                   <FormControl>
-                    <Input
-                      placeholder="Live, Peak Time"
-                      autoComplete="off"
-                      {...field}
+                    <TagCombobox
+                      value={field.value ?? ""}
+                      onChange={field.onChange}
+                      onBlur={field.onBlur}
+                      disabled={isSubmitting}
                     />
                   </FormControl>
-                  <FormDescription>Comma-separated.</FormDescription>
+                  <FormDescription>
+                    Search existing tags or create new ones.
+                  </FormDescription>
                   <FormMessage />
                 </FormItem>
               )}

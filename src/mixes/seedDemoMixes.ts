@@ -1,4 +1,4 @@
-import type { Artist, Genre, PrismaClient, Tag } from "@prisma/client";
+import type { Artist, PrismaClient } from "@prisma/client";
 
 /** Seed shape aligned with Mix + Artist + Genre[] + Tag[] in schema.prisma */
 type DemoMixSeed = {
@@ -7,8 +7,8 @@ type DemoMixSeed = {
   promoter?: string;
   description?: string;
   artist: Pick<Artist, "name">;
-  genres: Pick<Genre, "name">[];
-  tags: Pick<Tag, "name">[];
+  genres: { name: string }[];
+  tags: { name: string }[];
 };
 
 const DEMO_MIXES: DemoMixSeed[] = [
@@ -100,12 +100,13 @@ function daysAgo(days: number): Date {
   return new Date(Date.now() - days * 24 * 60 * 60 * 1000);
 }
 
-async function findOrCreateArtist(
+async function ensureArtist(
   prisma: PrismaClient,
   cache: Map<string, Artist>,
   name: string,
 ): Promise<Artist> {
-  const cached = cache.get(name);
+  const cacheKey = name.toLowerCase();
+  const cached = cache.get(cacheKey);
   if (cached) {
     return cached;
   }
@@ -115,50 +116,14 @@ async function findOrCreateArtist(
   });
   const artist =
     existing ?? (await prisma.artist.create({ data: { name } }));
-  cache.set(name, artist);
+  cache.set(cacheKey, artist);
   return artist;
-}
-
-async function findOrCreateGenre(
-  prisma: PrismaClient,
-  cache: Map<string, Genre>,
-  name: string,
-): Promise<Genre> {
-  const cached = cache.get(name);
-  if (cached) {
-    return cached;
-  }
-
-  const existing = await prisma.genre.findFirst({
-    where: { name: { equals: name, mode: "insensitive" } },
-  });
-  const genre = existing ?? (await prisma.genre.create({ data: { name } }));
-  cache.set(name, genre);
-  return genre;
-}
-
-async function findOrCreateTag(
-  prisma: PrismaClient,
-  cache: Map<string, Tag>,
-  name: string,
-): Promise<Tag> {
-  const cached = cache.get(name);
-  if (cached) {
-    return cached;
-  }
-
-  const existing = await prisma.tag.findFirst({
-    where: { name: { equals: name, mode: "insensitive" } },
-  });
-  const tag = existing ?? (await prisma.tag.create({ data: { name } }));
-  cache.set(name, tag);
-  return tag;
 }
 
 /**
  * Seeds demo mixes (and staggered favourites) when the Mix table is empty.
- * Creates Artist, Genre, and Tag rows as needed and links them per schema.
- * Safe to call repeatedly - no-ops once mixes exist.
+ * Genre and Tag names are @unique - upserted once up front, then mixes connect
+ * by name. Safe to call repeatedly - no-ops once mixes exist.
  */
 export async function ensureDemoMixesSeeded(
   prisma: PrismaClient,
@@ -168,25 +133,43 @@ export async function ensureDemoMixesSeeded(
     return { seeded: false, mixCount: existingCount };
   }
 
+  // Upsert unique genres/tags first so parallel mix creates can't race on name.
+  const genreNames = [
+    ...new Set(DEMO_MIXES.flatMap((mix) => mix.genres.map((g) => g.name))),
+  ];
+  const tagNames = [
+    ...new Set(DEMO_MIXES.flatMap((mix) => mix.tags.map((t) => t.name))),
+  ];
+
+  for (const name of genreNames) {
+    await prisma.genre.upsert({
+      where: { name },
+      update: {},
+      create: { name },
+    });
+  }
+  for (const name of tagNames) {
+    await prisma.tag.upsert({
+      where: { name },
+      update: {},
+      create: { name },
+    });
+  }
+
   const artistCache = new Map<string, Artist>();
-  const genreCache = new Map<string, Genre>();
-  const tagCache = new Map<string, Tag>();
+  const artistNames = [
+    ...new Set(DEMO_MIXES.map((mix) => mix.artist.name)),
+  ];
+  for (const name of artistNames) {
+    await ensureArtist(prisma, artistCache, name);
+  }
 
   const mixes = await Promise.all(
     DEMO_MIXES.map(async (seed) => {
-      const artist = await findOrCreateArtist(
-        prisma,
-        artistCache,
-        seed.artist.name,
-      );
-      const genres = await Promise.all(
-        seed.genres.map((genre) =>
-          findOrCreateGenre(prisma, genreCache, genre.name),
-        ),
-      );
-      const tags = await Promise.all(
-        seed.tags.map((tag) => findOrCreateTag(prisma, tagCache, tag.name)),
-      );
+      const artist = artistCache.get(seed.artist.name.toLowerCase());
+      if (!artist) {
+        throw new Error(`Missing seeded artist: ${seed.artist.name}`);
+      }
 
       return prisma.mix.create({
         data: {
@@ -196,10 +179,10 @@ export async function ensureDemoMixesSeeded(
           description: seed.description,
           artistId: artist.id,
           genres: {
-            connect: genres.map((genre) => ({ id: genre.id })),
+            connect: seed.genres.map((genre) => ({ name: genre.name })),
           },
           tags: {
-            connect: tags.map((tag) => ({ id: tag.id })),
+            connect: seed.tags.map((tag) => ({ name: tag.name })),
           },
         },
       });

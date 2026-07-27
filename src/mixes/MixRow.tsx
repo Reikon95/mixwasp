@@ -103,9 +103,13 @@ export function MixRow({
           {mix.genres.map((genre, index) => (
             <span key={genre.id} className="inline-flex items-center">
               {(showArtist || mix.promoter || index > 0) && <MetaSeparator />}
-              <span className="bg-muted text-muted-foreground rounded-full px-2 py-0.5 text-[11px] font-medium">
+              <WaspRouterLink
+                to={routes.GenreMixesRoute.to}
+                params={{ genreId: genre.id }}
+                className="bg-muted text-muted-foreground hover:text-foreground rounded-full px-2 py-0.5 text-[11px] font-medium transition-colors"
+              >
                 {genre.name}
-              </span>
+              </WaspRouterLink>
             </span>
           ))}
           {mix.tags.map((tag) => (
