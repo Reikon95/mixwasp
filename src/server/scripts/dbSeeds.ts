@@ -6,7 +6,6 @@ import {
   getSubscriptionPaymentPlanIds,
   SubscriptionStatus,
 } from "../../payment/plans";
-import { ALLOWED_FILE_TYPES } from "../../file-upload/validation";
 import { ensureDemoMixesSeeded } from "../../mixes/seedDemoMixes";
 
 type MockUserData = Omit<User, "id">;
@@ -38,41 +37,6 @@ export const seedMockMixes: DbSeedFn = async (prismaClient) => {
       `Mixes already present (${result.mixCount}); skipped mix seed.`,
     );
   }
-};
-
-/**
- * Seeds File rows for existing users (creates a few users if none exist).
- * S3 keys are fake placeholders for local/dev UI - they are not uploaded to S3.
- */
-export const seedMockFiles: DbSeedFn = async (prismaClient) => {
-  let users = await prismaClient.user.findMany({ take: 10 });
-  if (users.length === 0) {
-    users = await Promise.all(
-      generateMockUsersData(5).map((data) =>
-        prismaClient.user.create({ data }),
-      ),
-    );
-    console.log("No users found; created 5 users for file seeding.");
-  }
-
-  const files = users.flatMap((user) => {
-    const count = faker.number.int({ min: 1, max: 3 });
-    return Array.from({ length: count }, () => {
-      const fileType = faker.helpers.arrayElement(ALLOWED_FILE_TYPES);
-      const extension = extensionForMime(fileType);
-      const fileName = `${faker.system.commonFileName(extension)}`;
-      return {
-        name: fileName,
-        type: fileType,
-        s3Key: `seed/${user.id}/${faker.string.uuid()}-${fileName}`,
-        userId: user.id,
-        createdAt: faker.date.recent({ days: 60 }),
-      };
-    });
-  });
-
-  await prismaClient.file.createMany({ data: files });
-  console.log(`Seeded ${files.length} mock files.`);
 };
 
 /**
@@ -152,7 +116,6 @@ export const seedMockLogs: DbSeedFn = async (prismaClient) => {
     "Payment webhook received.",
     "Failed to fetch analytics provider data.",
     "User subscription status updated.",
-    "S3 signed URL generated.",
     "Retrying failed background job.",
     "Rate limit approaching for analytics API.",
   ];
@@ -173,7 +136,6 @@ export const seedMockLogs: DbSeedFn = async (prismaClient) => {
 export const seedAll: DbSeedFn = async (prismaClient) => {
   await seedMockUsers(prismaClient);
   await seedMockMixes(prismaClient);
-  await seedMockFiles(prismaClient);
   await seedMockDailyStats(prismaClient);
   await seedMockLogs(prismaClient);
   console.log("Finished seedAll.");
@@ -223,23 +185,4 @@ function startOfUtcDay(daysAgo: number): Date {
   date.setUTCHours(0, 0, 0, 0);
   date.setUTCDate(date.getUTCDate() - daysAgo);
   return date;
-}
-
-function extensionForMime(mime: (typeof ALLOWED_FILE_TYPES)[number]): string {
-  switch (mime) {
-    case "image/jpeg":
-      return "jpg";
-    case "image/png":
-      return "png";
-    case "application/pdf":
-      return "pdf";
-    case "text/*":
-      return "txt";
-    case "video/quicktime":
-      return "mov";
-    case "video/mp4":
-      return "mp4";
-    default:
-      return "bin";
-  }
 }

@@ -22,20 +22,7 @@ model User {
   datePaid                  DateTime?
   credits                   Int             @default(3)
 
-  files                     File[]
   mixFavourites             MixFavourite[]
-}
-
-model File {
-  id                        String          @id @default(uuid())
-  createdAt                 DateTime        @default(now())
-
-  user                      User            @relation(fields: [userId], references: [id])
-  userId                    String
-
-  name                      String
-  type                      String
-  s3Key                     String
 }
 
 model DailyStats {

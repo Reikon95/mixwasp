@@ -6,7 +6,6 @@ import { serverEnvValidationSchema } from "./src/env" with { type: "ref" };
 import {
   seedAll,
   seedMockDailyStats,
-  seedMockFiles,
   seedMockLogs,
   seedMockMixes,
   seedMockUsers,
@@ -16,7 +15,6 @@ import { adminSpec } from "./src/admin/admin.wasp";
 import { analyticsSpec } from "./src/analytics/analytics.wasp";
 import { authConfig, authSpec } from "./src/auth/auth.wasp";
 import { head } from "./src/client/head.wasp";
-import { fileUploadSpec } from "./src/file-upload/file-upload.wasp";
 import { mixesSpec } from "./src/mixes/mixes.wasp";
 import { paymentSpec } from "./src/payment/payment.wasp";
 import { emailSender } from "./src/server/emailSender.wasp";
@@ -30,11 +28,10 @@ export default app({
   auth: authConfig,
   db: {
     // Run `wasp db seed` (or `wasp db seed <name>`) to populate the DB.
-    // https://wasp.sh/docs/data-model/databases#seeding-the-database
+    // https://wasp.sh/docs/data-model/backends#seeding-the-database
     seeds: [
       seedMockUsers,
       seedMockMixes,
-      seedMockFiles,
       seedMockDailyStats,
       seedMockLogs,
       seedAll,
@@ -53,7 +50,6 @@ export default app({
     authSpec,
     userSpec,
     paymentSpec,
-    fileUploadSpec,
     analyticsSpec,
     adminSpec,
     route("NotFoundRoute", "*", page(NotFoundPage)),
