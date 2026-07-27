@@ -1,8 +1,6 @@
 node_modules/
 .wasp/
 
+# Secrets — never commit
 .env.server
-
 .env.client
-
-*.env.server
