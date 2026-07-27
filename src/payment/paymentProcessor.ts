@@ -3,7 +3,10 @@ import { User } from "wasp/entities";
 import type { MiddlewareConfigFn } from "wasp/server";
 import type { PaymentsWebhook } from "wasp/server/api";
 import type { PaymentPlan } from "./plans";
-import { stripePaymentProcessor } from "./stripe/paymentProcessor";
+import { disabledPaymentProcessor } from "./disabledPaymentProcessor";
+// import { stripePaymentProcessor } from "./stripe/paymentProcessor";
+// import { lemonSqueezyPaymentProcessor } from "./lemonSqueezy/paymentProcessor";
+// import { polarPaymentProcessor } from "./polar/paymentProcessor";
 
 export interface CreateCheckoutSessionArgs {
   userId: User["id"];
@@ -31,9 +34,10 @@ export interface PaymentProcessor {
 }
 
 /**
- * Choose which payment processor you'd like to use, then delete the
- * other payment processor code that you're not using  from `/src/payment`
+ * Payments are disabled for now so deploy works without Stripe keys.
+ * When ready, switch back to `stripePaymentProcessor` (and set Stripe secrets).
  */
-export const paymentProcessor: PaymentProcessor = stripePaymentProcessor;
+export const paymentProcessor: PaymentProcessor = disabledPaymentProcessor;
+// export const paymentProcessor: PaymentProcessor = stripePaymentProcessor;
 // export const paymentProcessor: PaymentProcessor = lemonSqueezyPaymentProcessor;
 // export const paymentProcessor: PaymentProcessor = polarPaymentProcessor;

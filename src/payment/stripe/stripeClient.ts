@@ -25,6 +25,21 @@ import { env } from "wasp/server";
  */
 const STRIPE_API_VERSION = "2025-04-30.basil";
 
-export const stripeClient = new Stripe(env.STRIPE_API_KEY, {
-  apiVersion: STRIPE_API_VERSION,
+let stripeClientInstance: Stripe | null = null;
+
+/** Lazy Stripe client — only constructed when payments are actually used. */
+export const stripeClient: Stripe = new Proxy({} as Stripe, {
+  get(_target, prop, receiver) {
+    if (!stripeClientInstance) {
+      if (!env.STRIPE_API_KEY) {
+        throw new Error(
+          "STRIPE_API_KEY is not set. Configure Stripe before enabling payments.",
+        );
+      }
+      stripeClientInstance = new Stripe(env.STRIPE_API_KEY, {
+        apiVersion: STRIPE_API_VERSION,
+      });
+    }
+    return Reflect.get(stripeClientInstance, prop, receiver);
+  },
 });
