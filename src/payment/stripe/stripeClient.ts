@@ -27,7 +27,7 @@ const STRIPE_API_VERSION = "2025-04-30.basil";
 
 let stripeClientInstance: Stripe | null = null;
 
-/** Lazy Stripe client — only constructed when payments are actually used. */
+/** Lazy Stripe client - only constructed when payments are actually used. */
 export const stripeClient: Stripe = new Proxy({} as Stripe, {
   get(_target, prop, receiver) {
     if (!stripeClientInstance) {

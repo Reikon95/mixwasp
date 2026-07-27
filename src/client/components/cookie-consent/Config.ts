@@ -62,7 +62,7 @@ export const getConfig = () => {
                 const GA_ANALYTICS_ID = import.meta.env
                   .REACT_APP_GOOGLE_ANALYTICS_ID;
                 if (!GA_ANALYTICS_ID || !GA_ANALYTICS_ID.length) {
-                  // Analytics is optional — skip loading gtag when unset.
+                  // Analytics is optional - skip loading gtag when unset.
                   return;
                 }
                 window.dataLayer = window.dataLayer || [];
@@ -86,7 +86,7 @@ export const getConfig = () => {
                 console.error(error);
               }
             },
-            onReject: () => {},
+            onReject: () => { },
           },
         },
       },

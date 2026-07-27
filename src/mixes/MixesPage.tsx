@@ -1,6 +1,5 @@
 import { useAuth } from "wasp/client/auth";
 import {
-  ensureDemoMixes,
   getPopularMixes,
   toggleMixFavourite,
   useQuery,
@@ -8,7 +7,7 @@ import {
 import { Link as WaspRouterLink, routes } from "wasp/client/router";
 
 import { Plus } from "lucide-react";
-import { useEffect, useState, useEffectEvent } from "react";
+import { useState } from "react";
 import { Button } from "../client/components/ui/button";
 import { MixWaspLoader } from "../client/components/MixWaspLoader";
 import { toast } from "../client/hooks/use-toast";
@@ -27,7 +26,6 @@ const PERIODS: { value: PopularityPeriod; label: string }[] = [
 export function MixesPage() {
   const { data: user } = useAuth();
   const [period, setPeriod] = useState<PopularityPeriod>("week");
-  const [isSeeding, setIsSeeding] = useState(false);
   const [togglingMixId, setTogglingMixId] = useState<number | null>(null);
 
   const {
@@ -36,33 +34,6 @@ export function MixesPage() {
     error,
     refetch,
   } = useQuery(getPopularMixes, { period });
-
-  const seedIfEmpty = useEffectEvent(async () => {
-    setIsSeeding(true);
-    try {
-      const result = await ensureDemoMixes();
-      if (result.seeded) {
-        toast({
-          title: "Demo mixes loaded",
-          description: "Sample sets are ready - favourite a few to try it out.",
-        });
-        await refetch();
-      }
-    } catch (err: unknown) {
-      console.error(err);
-      toast({
-        title: "Could not load demo mixes",
-        description: "Please refresh and try again.",
-        variant: "destructive",
-      });
-    } finally {
-      setIsSeeding(false);
-    }
-  });
-
-  useEffect(() => {
-    void seedIfEmpty();
-  }, []);
 
   const handleToggleFavourite = async (mixId: number) => {
     if (!user) {
@@ -90,7 +61,7 @@ export function MixesPage() {
   };
 
   const showEmptyPeriod =
-    !isLoading && !isSeeding && mixes !== undefined && mixes.length === 0;
+    !isLoading && mixes !== undefined && mixes.length === 0;
 
   return (
     <main className="mixes-page px-4 py-8 sm:px-6 sm:py-10 lg:px-8">
@@ -101,7 +72,7 @@ export function MixesPage() {
               Charts
             </h1>
             <p className="text-muted-foreground mt-1 text-sm">
-              Top mixes by favourites — heart the ones you keep coming back to.
+              Top mixes by favourites - heart the ones you keep coming back to.
             </p>
           </div>
           {user ? (
@@ -126,7 +97,7 @@ export function MixesPage() {
         </header>
 
         <div
-          className="border-border mb-6 flex gap-1 overflow-x-auto border-b sm:gap-4"
+          className="border-border mb-6 flex gap-1 overflow-x-auto overflow-y-hidden border-b sm:gap-4"
           role="tablist"
           aria-label="Popularity period"
         >
@@ -149,11 +120,7 @@ export function MixesPage() {
           ))}
         </div>
 
-        {(isLoading || isSeeding) && (
-          <MixWaspLoader
-            label={isSeeding ? "Loading demo mixes" : "Loading mixes"}
-          />
-        )}
+        {isLoading && <MixWaspLoader label="Loading mixes" />}
 
         {error && (
           <p className="text-destructive text-sm">
@@ -163,20 +130,27 @@ export function MixesPage() {
 
         {showEmptyPeriod && (
           <div className="border-border rounded-md border border-dashed px-6 py-12 text-center">
-            <p className="font-medium">No favourites in this period yet</p>
+            <p className="font-medium">No mixes in this period yet</p>
             <p className="text-muted-foreground mt-2 text-sm">
-              Switch to All time, or log in and heart a mix to get this
-              leaderboard moving.
+              Switch to All time, or submit a mix to get the charts started.
             </p>
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              className="mt-4"
-              onClick={() => setPeriod("all")}
-            >
-              View all time
-            </Button>
+            <div className="mt-4 flex flex-wrap items-center justify-center gap-2">
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={() => setPeriod("all")}
+              >
+                View all time
+              </Button>
+              {user && (
+                <Button asChild size="sm">
+                  <WaspRouterLink to={routes.SubmitMixRoute.to}>
+                    Submit mix
+                  </WaspRouterLink>
+                </Button>
+              )}
+            </div>
           </div>
         )}
 

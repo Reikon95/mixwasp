@@ -49,6 +49,11 @@ export type ArtistMixesResult = {
   mixes: ArtistMix[];
 };
 
+export type TagMixesResult = {
+  tag: Tag;
+  mixes: ArtistMix[];
+};
+
 export type MixLinkPreviewResult = {
   platform: "youtube" | "soundcloud" | "mixcloud";
   title: string | null;

@@ -2,18 +2,17 @@ import type { Artist, Genre, Mix, Tag } from "wasp/entities";
 import { HttpError, prisma } from "wasp/server";
 import type {
   CreateMix,
-  EnsureDemoMixes,
   GetArtistMixes,
   GetMixLinkPreview,
   GetMyFavouriteMixes,
   GetPopularMixes,
+  GetTagMixes,
   SearchArtists,
   ToggleMixFavourite,
 } from "wasp/server/operations";
 
 import * as z from "zod";
 import { ensureArgsSchemaOrThrowHttpError } from "../server/validation";
-import { ensureDemoMixesSeeded } from "./seedDemoMixes";
 import {
   createMixInputSchema,
   popularityPeriodSchema,
@@ -24,6 +23,7 @@ import {
   type PopularMix,
   type PopularityPeriod,
   type SearchArtistsInput,
+  type TagMixesResult,
   searchArtistsInputSchema,
 } from "./schemas";
 import { fetchMixLinkPreview } from "./mixLinkPreview";
@@ -140,13 +140,6 @@ function getPeriodStart(period: PopularityPeriod): Date | null {
       return null;
   }
 }
-
-export const ensureDemoMixes: EnsureDemoMixes<
-  void,
-  { seeded: boolean; mixCount: number }
-> = async (_args, _context) => {
-  return ensureDemoMixesSeeded(prisma);
-};
 
 const toggleMixFavouriteInputSchema = z.object({
   mixId: z.number().int().positive(),
@@ -377,6 +370,61 @@ export const getArtistMixes: GetArtistMixes<
 
   return {
     artist,
+    mixes: mixes.map((mix) => {
+      const { favourites, ...rest } = mix as typeof mix & {
+        favourites?: { id: string }[];
+      };
+      return {
+        ...rest,
+        hasFavourited: (favourites?.length ?? 0) > 0,
+      } satisfies ArtistMix;
+    }),
+  };
+};
+
+const getTagMixesInputSchema = z.object({
+  tagId: z.number().int().positive(),
+});
+
+type GetTagMixesInput = z.infer<typeof getTagMixesInputSchema>;
+
+export const getTagMixes: GetTagMixes<
+  GetTagMixesInput,
+  TagMixesResult
+> = async (rawArgs, context) => {
+  const { tagId } = ensureArgsSchemaOrThrowHttpError(
+    getTagMixesInputSchema,
+    rawArgs,
+  );
+
+  const tag = await context.entities.Tag.findUnique({
+    where: { id: tagId },
+  });
+  if (!tag) {
+    throw new HttpError(404, "Tag not found");
+  }
+
+  const userId = context.user?.id;
+
+  const mixes = await context.entities.Mix.findMany({
+    where: { tags: { some: { id: tagId } } },
+    include: {
+      ...mixInclude,
+      ...(userId
+        ? {
+            favourites: {
+              where: { userId },
+              select: { id: true },
+              take: 1,
+            },
+          }
+        : {}),
+    },
+    orderBy: [{ favouriteCount: "desc" }, { createdAt: "desc" }],
+  });
+
+  return {
+    tag,
     mixes: mixes.map((mix) => {
       const { favourites, ...rest } = mix as typeof mix & {
         favourites?: { id: string }[];

@@ -111,7 +111,13 @@ export function MixRow({
           {mix.tags.map((tag) => (
             <span key={tag.id} className="inline-flex items-center">
               <MetaSeparator />
-              <span>#{tag.name}</span>
+              <WaspRouterLink
+                to={routes.TagMixesRoute.to}
+                params={{ tagId: tag.id }}
+                className="hover:text-foreground underline-offset-2 hover:underline"
+              >
+                #{tag.name}
+              </WaspRouterLink>
             </span>
           ))}
         </p>

@@ -26,7 +26,7 @@ export function SignupFormWithGooglePrimary() {
       setEmail("");
       setPassword("");
       setSuccess(
-        "Account created — check your email for a verification link.",
+        "Account created - check your email for a verification link.",
       );
     } catch (err: unknown) {
       const message =

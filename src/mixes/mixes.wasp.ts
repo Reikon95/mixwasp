@@ -3,14 +3,15 @@ import { action, page, query, route, type Spec } from "@wasp.sh/spec";
 import { FavouriteMixesPage } from "./FavouriteMixesPage" with { type: "ref" };
 import { MixesPage } from "./MixesPage" with { type: "ref" };
 import { ArtistMixesPage } from "./ArtistMixesPage" with { type: "ref" };
+import { TagMixesPage } from "./TagMixesPage" with { type: "ref" };
 import { SubmitMixPage } from "./SubmitMixPage" with { type: "ref" };
 import {
   createMix,
-  ensureDemoMixes,
   getArtistMixes,
   getMixLinkPreview,
   getMyFavouriteMixes,
   getPopularMixes,
+  getTagMixes,
   searchArtists,
   toggleMixFavourite,
 } from "./operations" with { type: "ref" };
@@ -18,6 +19,7 @@ import {
 export const mixesSpec: Spec = [
   route("MixesRoute", "/", page(MixesPage)),
   route("ArtistMixesRoute", "/artist/:artistId", page(ArtistMixesPage)),
+  route("TagMixesRoute", "/tag/:tagId", page(TagMixesPage)),
   route(
     "FavouriteMixesRoute",
     "/favourites",
@@ -35,6 +37,9 @@ export const mixesSpec: Spec = [
   query(getArtistMixes, {
     entities: ["Mix", "MixFavourite", "Artist", "Genre", "Tag"],
   }),
+  query(getTagMixes, {
+    entities: ["Mix", "MixFavourite", "Artist", "Genre", "Tag"],
+  }),
   query(getMyFavouriteMixes, {
     entities: ["Mix", "MixFavourite", "Artist", "Genre", "Tag"],
   }),
@@ -44,9 +49,6 @@ export const mixesSpec: Spec = [
   }),
   action(toggleMixFavourite, {
     entities: ["User", "Mix", "MixFavourite"],
-  }),
-  action(ensureDemoMixes, {
-    entities: ["User", "Mix", "MixFavourite", "Artist", "Genre", "Tag"],
   }),
   action(createMix, {
     entities: ["User", "Mix", "Artist", "Genre", "Tag"],

@@ -410,7 +410,7 @@ export function UiLibraryPage({ user }: { user: AuthUser }) {
           description="App-specific loading state."
           className="flex justify-center"
         >
-          <MixWaspLoader label="Loading demo mixes" />
+          <MixWaspLoader label="Loading mixes" />
         </ComponentSection>
       </div>
     </DefaultLayout>
