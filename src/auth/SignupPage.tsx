@@ -1,6 +1,6 @@
-import { SignupForm } from "wasp/client/auth";
 import { Link as WaspRouterLink, routes } from "wasp/client/router";
 import { AuthPageLayout } from "./AuthPageLayout";
+import { SignupFormWithGooglePrimary } from "./SignupFormWithGooglePrimary";
 import { useRedirectIfLoggedIn } from "./hooks/useRedirectIfLoggedIn";
 
 export function SignupPage() {
@@ -8,16 +8,13 @@ export function SignupPage() {
 
   return (
     <AuthPageLayout>
-      <SignupForm />
-      <br />
-      <span className="text-sm font-medium text-gray-900">
-        I already have an account (
+      <SignupFormWithGooglePrimary />
+      <p className="mt-6 text-center text-sm font-medium text-gray-700">
+        Already have an account?{" "}
         <WaspRouterLink to={routes.LoginRoute.to} className="underline">
-          go to login
+          Log in
         </WaspRouterLink>
-        ).
-      </span>
-      <br />
+      </p>
     </AuthPageLayout>
   );
 }

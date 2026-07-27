@@ -1,6 +1,6 @@
-import { LoginForm } from "wasp/client/auth";
 import { Link as WaspRouterLink, routes } from "wasp/client/router";
 import { AuthPageLayout } from "./AuthPageLayout";
+import { LoginFormWithGooglePrimary } from "./LoginFormWithGooglePrimary";
 import { useRedirectIfLoggedIn } from "./hooks/useRedirectIfLoggedIn";
 
 export function LoginPage() {
@@ -8,17 +8,14 @@ export function LoginPage() {
 
   return (
     <AuthPageLayout>
-      <LoginForm />
-      <br />
-      <span className="text-sm font-medium text-gray-900 dark:text-gray-900">
-        Don't have an account yet?{" "}
+      <LoginFormWithGooglePrimary />
+      <p className="mt-6 text-center text-sm font-medium text-gray-700">
+        Don&apos;t have an account yet?{" "}
         <WaspRouterLink to={routes.SignupRoute.to} className="underline">
-          Go to signup
+          Sign up
         </WaspRouterLink>
-        .
-      </span>
-      <br />
-      <span className="text-sm font-medium text-gray-900">
+      </p>
+      <p className="mt-2 text-center text-sm font-medium text-gray-700">
         Forgot your password?{" "}
         <WaspRouterLink
           to={routes.RequestPasswordResetRoute.to}
@@ -26,8 +23,7 @@ export function LoginPage() {
         >
           Reset it
         </WaspRouterLink>
-        .
-      </span>
+      </p>
     </AuthPageLayout>
   );
 }
