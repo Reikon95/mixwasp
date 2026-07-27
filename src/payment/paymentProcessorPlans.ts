@@ -13,14 +13,14 @@ export const paymentProcessorPlanIds = {
 } as const satisfies Record<PaymentPlanId, string>;
 
 /**
- * Returns your payment processor plan ID for a given Open SaaS `PaymentPlan`.
+ * Returns your payment processor plan ID for a given MixWasp `PaymentPlan`.
  */
 export function getPaymentProcessorPlanId(paymentPlan: PaymentPlan): string {
   return paymentProcessorPlanIds[paymentPlan.id];
 }
 
 /**
- * Returns Open SaaS `PaymentPlanId` for some payment provider's plan ID.
+ * Returns MixWasp `PaymentPlanId` for some payment provider's plan ID.
  *
  * Different payment providers track plan ID in different ways.
  * e.g. Stripe price ID, Polar product ID...

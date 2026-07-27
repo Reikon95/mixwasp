@@ -5,7 +5,7 @@ import { MessagesPage } from "./dashboards/messages/MessagesPage" with { type: "
 import { UsersDashboardPage } from "./dashboards/users/UsersDashboardPage" with { type: "ref" };
 import { CalendarPage } from "./elements/calendar/CalendarPage" with { type: "ref" };
 import { SettingsPage } from "./elements/settings/SettingsPage" with { type: "ref" };
-import { ButtonsPage } from "./elements/ui-elements/ButtonsPage" with { type: "ref" };
+import { UiLibraryPage } from "./elements/ui-elements/UiLibraryPage" with { type: "ref" };
 
 export const adminSpec: Spec = [
   route(
@@ -29,9 +29,9 @@ export const adminSpec: Spec = [
     page(CalendarPage, { authRequired: true }),
   ),
   route(
-    "AdminUIButtonsRoute",
-    "/admin/ui/buttons",
-    page(ButtonsPage, { authRequired: true }),
+    "AdminUiLibraryRoute",
+    "/admin/ui",
+    page(UiLibraryPage, { authRequired: true }),
   ),
   route(
     "AdminMessagesRoute",

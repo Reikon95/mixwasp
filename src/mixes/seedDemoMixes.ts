@@ -1,103 +1,94 @@
-import type { PrismaClient } from "@prisma/client";
+import type { Artist, Genre, PrismaClient, Tag } from "@prisma/client";
 
-const DEMO_ARTISTS = [
-  "Nora Vale",
-  "Kite Frequency",
-  "Mira Solis",
-  "Juniper Bass",
-  "Echo Marlowe",
-  "Riven Coast",
-] as const;
-
-const DEMO_GENRES = [
-  "House",
-  "Techno",
-  "Drum & Bass",
-  "Ambient",
-  "Disco",
-] as const;
-
-const DEMO_TAGS = ["Live", "Warmup", "Peak Time", "Sunrise", "Radio"] as const;
-
+/** Seed shape aligned with Mix + Artist + Genre[] + Tag[] in schema.prisma */
 type DemoMixSeed = {
   title: string;
-  artist: (typeof DEMO_ARTISTS)[number];
   link: string;
   promoter?: string;
-  description: string;
-  genres: (typeof DEMO_GENRES)[number][];
-  tags: (typeof DEMO_TAGS)[number][];
+  description?: string;
+  artist: Pick<Artist, "name">;
+  genres: Pick<Genre, "name">[];
+  tags: Pick<Tag, "name">[];
 };
 
 const DEMO_MIXES: DemoMixSeed[] = [
   {
     title: "Warehouse Soft Open",
-    artist: "Nora Vale",
+    artist: { name: "Nora Vale" },
     link: "https://soundcloud.com/",
     promoter: "North Dock",
     description: "Rolling house for a slow-build Friday.",
-    genres: ["House"],
-    tags: ["Warmup", "Live"],
+    genres: [{ name: "House" }],
+    tags: [{ name: "Warmup" }, { name: "Live" }],
   },
   {
     title: "Chrome Stairs",
-    artist: "Kite Frequency",
+    artist: { name: "Kite Frequency" },
     link: "https://soundcloud.com/",
     promoter: "Circuit Room",
     description: "Tight techno with a late-night edge.",
-    genres: ["Techno"],
-    tags: ["Peak Time"],
+    genres: [{ name: "Techno" }],
+    tags: [{ name: "Peak Time" }],
   },
   {
     title: "Salt Air Transmission",
-    artist: "Mira Solis",
+    artist: { name: "Mira Solis" },
     link: "https://soundcloud.com/",
     description: "Coastal disco edits into deep house.",
-    genres: ["Disco", "House"],
-    tags: ["Radio", "Warmup"],
+    genres: [{ name: "Disco" }, { name: "House" }],
+    tags: [{ name: "Radio" }, { name: "Warmup" }],
   },
   {
     title: "Low Pressure System",
-    artist: "Juniper Bass",
+    artist: { name: "Juniper Bass" },
     link: "https://soundcloud.com/",
     promoter: "Basin",
     description: "Half-time drum & bass with heavy subs.",
-    genres: ["Drum & Bass"],
-    tags: ["Peak Time", "Live"],
+    genres: [{ name: "Drum & Bass" }],
+    tags: [{ name: "Peak Time" }, { name: "Live" }],
   },
   {
     title: "Afterglow Corridor",
-    artist: "Echo Marlowe",
+    artist: { name: "Echo Marlowe" },
     link: "https://soundcloud.com/",
     description: "Ambient drift for the walk home.",
-    genres: ["Ambient"],
-    tags: ["Sunrise"],
+    genres: [{ name: "Ambient" }],
+    tags: [{ name: "Sunrise" }],
   },
   {
     title: "Second Wind",
-    artist: "Riven Coast",
+    artist: { name: "Riven Coast" },
     link: "https://soundcloud.com/",
     promoter: "Harbor Line",
     description: "Peak-time house with a live vocal cut.",
-    genres: ["House"],
-    tags: ["Peak Time", "Live"],
+    genres: [{ name: "House" }],
+    tags: [{ name: "Peak Time" }, { name: "Live" }],
   },
   {
     title: "Night Bus Sketch",
-    artist: "Nora Vale",
+    artist: { name: "Nora Vale" },
     link: "https://soundcloud.com/",
     description: "Unreleased techno tools and closed loops.",
-    genres: ["Techno"],
-    tags: ["Radio"],
+    genres: [{ name: "Techno" }],
+    tags: [{ name: "Radio" }],
   },
   {
     title: "Green Room Heat",
-    artist: "Kite Frequency",
+    artist: { name: "Kite Frequency" },
     link: "https://soundcloud.com/",
     promoter: "Circuit Room",
     description: "Drum & bass warm-up before the headliner.",
-    genres: ["Drum & Bass"],
-    tags: ["Warmup"],
+    genres: [{ name: "Drum & Bass" }],
+    tags: [{ name: "Warmup" }],
+  },
+  {
+    title: "Paradise City 2026",
+    artist: { name: "Interplanetary Criminal" },
+    link: "https://www.youtube.com/watch?v=rseeyi0pFq8",
+    promoter: "Paradise City Festival",
+    description: "UK garage and breakbeat energy from Paradise City 2026.",
+    genres: [{ name: "House" }, { name: "Disco" }],
+    tags: [{ name: "Live" }, { name: "Peak Time" }],
   },
 ];
 
@@ -109,9 +100,65 @@ function daysAgo(days: number): Date {
   return new Date(Date.now() - days * 24 * 60 * 60 * 1000);
 }
 
+async function findOrCreateArtist(
+  prisma: PrismaClient,
+  cache: Map<string, Artist>,
+  name: string,
+): Promise<Artist> {
+  const cached = cache.get(name);
+  if (cached) {
+    return cached;
+  }
+
+  const existing = await prisma.artist.findFirst({
+    where: { name: { equals: name, mode: "insensitive" } },
+  });
+  const artist =
+    existing ?? (await prisma.artist.create({ data: { name } }));
+  cache.set(name, artist);
+  return artist;
+}
+
+async function findOrCreateGenre(
+  prisma: PrismaClient,
+  cache: Map<string, Genre>,
+  name: string,
+): Promise<Genre> {
+  const cached = cache.get(name);
+  if (cached) {
+    return cached;
+  }
+
+  const existing = await prisma.genre.findFirst({
+    where: { name: { equals: name, mode: "insensitive" } },
+  });
+  const genre = existing ?? (await prisma.genre.create({ data: { name } }));
+  cache.set(name, genre);
+  return genre;
+}
+
+async function findOrCreateTag(
+  prisma: PrismaClient,
+  cache: Map<string, Tag>,
+  name: string,
+): Promise<Tag> {
+  const cached = cache.get(name);
+  if (cached) {
+    return cached;
+  }
+
+  const existing = await prisma.tag.findFirst({
+    where: { name: { equals: name, mode: "insensitive" } },
+  });
+  const tag = existing ?? (await prisma.tag.create({ data: { name } }));
+  cache.set(name, tag);
+  return tag;
+}
+
 /**
- * Seeds demo mixes (and staggered upvotes) when the Mix table is empty.
- * Safe to call repeatedly — no-ops once mixes exist.
+ * Seeds demo mixes (and staggered favourites) when the Mix table is empty.
+ * Creates Artist, Genre, and Tag rows as needed and links them per schema.
+ * Safe to call repeatedly - no-ops once mixes exist.
  */
 export async function ensureDemoMixesSeeded(
   prisma: PrismaClient,
@@ -121,59 +168,45 @@ export async function ensureDemoMixesSeeded(
     return { seeded: false, mixCount: existingCount };
   }
 
-  const artists = await Promise.all(
-    DEMO_ARTISTS.map((name) => prisma.artist.create({ data: { name } })),
-  );
-  const artistByName = new Map(artists.map((a) => [a.name, a]));
-
-  const genres = await Promise.all(
-    DEMO_GENRES.map((name) => prisma.genre.create({ data: { name } })),
-  );
-  const genreByName = new Map(genres.map((g) => [g.name, g]));
-
-  const tags = await Promise.all(
-    DEMO_TAGS.map((name) => prisma.tag.create({ data: { name } })),
-  );
-  const tagByName = new Map(tags.map((t) => [t.name, t]));
+  const artistCache = new Map<string, Artist>();
+  const genreCache = new Map<string, Genre>();
+  const tagCache = new Map<string, Tag>();
 
   const mixes = await Promise.all(
-    DEMO_MIXES.map((mix) => {
-      const artist = artistByName.get(mix.artist);
-      if (!artist) {
-        throw new Error(`Missing demo artist: ${mix.artist}`);
-      }
+    DEMO_MIXES.map(async (seed) => {
+      const artist = await findOrCreateArtist(
+        prisma,
+        artistCache,
+        seed.artist.name,
+      );
+      const genres = await Promise.all(
+        seed.genres.map((genre) =>
+          findOrCreateGenre(prisma, genreCache, genre.name),
+        ),
+      );
+      const tags = await Promise.all(
+        seed.tags.map((tag) => findOrCreateTag(prisma, tagCache, tag.name)),
+      );
 
       return prisma.mix.create({
         data: {
-          title: mix.title,
-          link: mix.link,
-          promoter: mix.promoter,
-          description: mix.description,
+          title: seed.title,
+          link: seed.link,
+          promoter: seed.promoter,
+          description: seed.description,
           artistId: artist.id,
           genres: {
-            connect: mix.genres.map((name) => {
-              const genre = genreByName.get(name);
-              if (!genre) {
-                throw new Error(`Missing demo genre: ${name}`);
-              }
-              return { id: genre.id };
-            }),
+            connect: genres.map((genre) => ({ id: genre.id })),
           },
           tags: {
-            connect: mix.tags.map((name) => {
-              const tag = tagByName.get(name);
-              if (!tag) {
-                throw new Error(`Missing demo tag: ${name}`);
-              }
-              return { id: tag.id };
-            }),
+            connect: tags.map((tag) => ({ id: tag.id })),
           },
         },
       });
     }),
   );
 
-  // Dedicated voters so period leaderboards have data without needing real logins.
+  // Dedicated users so period leaderboards have data without needing real logins.
   const voters = await Promise.all(
     Array.from({ length: 8 }, async (_, i) => {
       const email = `demo-voter-${i}@yourtopmixes.local`;
@@ -190,8 +223,8 @@ export async function ensureDemoMixesSeeded(
     }),
   );
 
-  // Vote schedules: some today, some this week, some earlier this month.
-  const votePlan: { mixIndex: number; voterIndex: number; at: Date }[] = [
+  // Favourite schedules: some today, some this week, some earlier this month.
+  const favouritePlan: { mixIndex: number; voterIndex: number; at: Date }[] = [
     { mixIndex: 0, voterIndex: 0, at: hoursAgo(1) },
     { mixIndex: 0, voterIndex: 1, at: hoursAgo(3) },
     { mixIndex: 1, voterIndex: 2, at: hoursAgo(2) },
@@ -209,25 +242,28 @@ export async function ensureDemoMixesSeeded(
     { mixIndex: 6, voterIndex: 6, at: daysAgo(18) },
     { mixIndex: 7, voterIndex: 7, at: daysAgo(20) },
     { mixIndex: 7, voterIndex: 0, at: daysAgo(22) },
+    { mixIndex: 8, voterIndex: 1, at: hoursAgo(4) },
+    { mixIndex: 8, voterIndex: 3, at: hoursAgo(6) },
+    { mixIndex: 8, voterIndex: 5, at: daysAgo(1) },
   ];
 
-  for (const vote of votePlan) {
-    const mix = mixes[vote.mixIndex];
-    const voter = voters[vote.voterIndex];
+  for (const favourite of favouritePlan) {
+    const mix = mixes[favourite.mixIndex];
+    const voter = voters[favourite.voterIndex];
     if (!mix || !voter) {
       continue;
     }
 
-    await prisma.mixUpvote.create({
+    await prisma.mixFavourite.create({
       data: {
         userId: voter.id,
         mixId: mix.id,
-        createdAt: vote.at,
+        createdAt: favourite.at,
       },
     });
   }
 
-  const counts = await prisma.mixUpvote.groupBy({
+  const counts = await prisma.mixFavourite.groupBy({
     by: ["mixId"],
     _count: { mixId: true },
   });
@@ -236,7 +272,7 @@ export async function ensureDemoMixesSeeded(
     counts.map((row) =>
       prisma.mix.update({
         where: { id: row.mixId },
-        data: { upvoteCount: row._count.mixId },
+        data: { favouriteCount: row._count.mixId },
       }),
     ),
   );

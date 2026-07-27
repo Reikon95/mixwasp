@@ -23,7 +23,7 @@ model User {
   credits                   Int             @default(3)
 
   files                     File[]
-  mixUpvotes                MixUpvote[]
+  mixFavourites             MixFavourite[]
 }
 
 model File {
@@ -85,8 +85,8 @@ model Mix {
   description              String?
   genres                   Genre[]
   tags                     Tag[]
-  upvotes                  MixUpvote[]
-  upvoteCount              Int             @default(0)
+  favourites               MixFavourite[]
+  favouriteCount           Int             @default(0)
 }
 
 
@@ -114,7 +114,7 @@ model Tag {
   mixes                    Mix[]
 }
 
-model MixUpvote {
+model MixFavourite {
   id                       String          @id @default(uuid())
   createdAt                DateTime        @default(now())
 

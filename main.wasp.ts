@@ -3,8 +3,14 @@ import { app, page, route } from "@wasp.sh/spec";
 import { App } from "./src/client/App" with { type: "ref" };
 import { NotFoundPage } from "./src/client/components/NotFoundPage" with { type: "ref" };
 import { serverEnvValidationSchema } from "./src/env" with { type: "ref" };
-import { LandingPage } from "./src/landing-page/LandingPage" with { type: "ref" };
-import { seedMockUsers } from "./src/server/scripts/dbSeeds" with { type: "ref" };
+import {
+  seedAll,
+  seedMockDailyStats,
+  seedMockFiles,
+  seedMockLogs,
+  seedMockMixes,
+  seedMockUsers,
+} from "./src/server/scripts/dbSeeds" with { type: "ref" };
 
 import { adminSpec } from "./src/admin/admin.wasp";
 import { analyticsSpec } from "./src/analytics/analytics.wasp";
@@ -19,14 +25,19 @@ import { userSpec } from "./src/user/user.wasp";
 export default app({
   name: "OpenSaaS",
   wasp: { version: "^0.24.0" },
-  title: "My Open SaaS App",
+  title: "MixWasp",
   head,
   auth: authConfig,
   db: {
-    // Run `wasp db seed` to seed the database with the seed functions below:
+    // Run `wasp db seed` (or `wasp db seed <name>`) to populate the DB.
+    // https://wasp.sh/docs/data-model/databases#seeding-the-database
     seeds: [
-      // Populates the database with a bunch of fake users to work with during development.
       seedMockUsers,
+      seedMockMixes,
+      seedMockFiles,
+      seedMockDailyStats,
+      seedMockLogs,
+      seedAll,
     ],
   },
   client: {
@@ -37,16 +48,14 @@ export default app({
   },
   emailSender,
   spec: [
-    // Prerendering routes with static content creates HTML files at build time that are served immediately,
-    // improving SEO, search engine/AI crawling, and performance: https://wasp.sh/docs/advanced/prerendering
-    route("LandingPageRoute", "/", page(LandingPage), { prerender: true }),
-    route("NotFoundRoute", "*", page(NotFoundPage)),
+    // Mixes rankings live at `/` via mixesSpec - product first.
+    mixesSpec,
     authSpec,
     userSpec,
     paymentSpec,
     fileUploadSpec,
-    mixesSpec,
     analyticsSpec,
     adminSpec,
+    route("NotFoundRoute", "*", page(NotFoundPage)),
   ],
 });

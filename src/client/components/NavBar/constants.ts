@@ -1,20 +1,8 @@
 import { routes } from "wasp/client/router";
-import { BlogUrl, DocsUrl } from "../../../shared/common";
 import type { NavigationItem } from "./NavBar";
 
-const staticNavigationItems: NavigationItem[] = [
-  { name: "Documentation", to: DocsUrl },
-  { name: "Blog", to: BlogUrl },
-];
-
-export const marketingNavigationItems: NavigationItem[] = [
-  { name: "Features", to: "/#features" },
-  { name: "Pricing", to: routes.PricingPageRoute.to },
-  ...staticNavigationItems,
-] as const;
-
-export const demoNavigationitems: NavigationItem[] = [
-  { name: "Mixes", to: routes.MixesRoute.to },
-  { name: "File Upload", to: routes.FileUploadRoute.to },
-  ...staticNavigationItems,
+export const appNavigationItems: NavigationItem[] = [
+  { name: "Charts", to: routes.MixesRoute.to },
+  { name: "Favourites", to: routes.FavouriteMixesRoute.to },
+  { name: "Submit", to: routes.SubmitMixRoute.to },
 ] as const;

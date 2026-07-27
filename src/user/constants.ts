@@ -1,13 +1,27 @@
-import { Headphones, Settings, Shield } from "lucide-react";
+import { Headphones, Heart, Plus, Settings, Shield } from "lucide-react";
 import { routes } from "wasp/client/router";
 
 export const userMenuItems = [
   {
-    name: "Mixes",
+    name: "Charts",
     to: routes.MixesRoute.to,
     icon: Headphones,
     isAdminOnly: false,
     isAuthRequired: false,
+  },
+  {
+    name: "Submit a mix",
+    to: routes.SubmitMixRoute.to,
+    icon: Plus,
+    isAdminOnly: false,
+    isAuthRequired: true,
+  },
+  {
+    name: "Your favourites",
+    to: routes.FavouriteMixesRoute.to,
+    icon: Heart,
+    isAdminOnly: false,
+    isAuthRequired: true,
   },
   {
     name: "Account Settings",

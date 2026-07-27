@@ -1,30 +1,89 @@
 import type { Artist, Genre, Mix, Tag } from "wasp/entities";
 import { HttpError, prisma } from "wasp/server";
 import type {
+  CreateMix,
   EnsureDemoMixes,
+  GetArtistMixes,
+  GetMixLinkPreview,
+  GetMyFavouriteMixes,
   GetPopularMixes,
-  ToggleMixUpvote,
+  SearchArtists,
+  ToggleMixFavourite,
 } from "wasp/server/operations";
 
 import * as z from "zod";
 import { ensureArgsSchemaOrThrowHttpError } from "../server/validation";
 import { ensureDemoMixesSeeded } from "./seedDemoMixes";
+import {
+  createMixInputSchema,
+  popularityPeriodSchema,
+  type ArtistMix,
+  type ArtistMixesResult,
+  type CreateMixInput,
+  type MixLinkPreviewResult,
+  type PopularMix,
+  type PopularityPeriod,
+  type SearchArtistsInput,
+  searchArtistsInputSchema,
+} from "./schemas";
+import { fetchMixLinkPreview } from "./mixLinkPreview";
+import { isAllowedMixLink } from "./mixEmbed";
 
-export const popularityPeriodSchema = z.enum([
-  "today",
-  "week",
-  "month",
-  "all",
-]);
+function parseNameList(value: string | undefined): string[] {
+  if (!value?.trim()) {
+    return [];
+  }
 
-export type PopularityPeriod = z.infer<typeof popularityPeriodSchema>;
+  const names = value
+    .split(",")
+    .map((part) => part.trim())
+    .filter(Boolean);
 
-export type PopularMix = Mix & {
+  return [...new Set(names.map((name) => name.replace(/\s+/g, " ")))];
+}
+
+async function findOrCreateArtistByName(name: string): Promise<Artist> {
+  const existing = await prisma.artist.findFirst({
+    where: { name: { equals: name, mode: "insensitive" } },
+  });
+  if (existing) {
+    return existing;
+  }
+  return prisma.artist.create({ data: { name } });
+}
+
+async function findOrCreateGenresByName(names: string[]): Promise<Genre[]> {
+  return Promise.all(
+    names.map(async (name) => {
+      const existing = await prisma.genre.findFirst({
+        where: { name: { equals: name, mode: "insensitive" } },
+      });
+      if (existing) {
+        return existing;
+      }
+      return prisma.genre.create({ data: { name } });
+    }),
+  );
+}
+
+async function findOrCreateTagsByName(names: string[]): Promise<Tag[]> {
+  return Promise.all(
+    names.map(async (name) => {
+      const existing = await prisma.tag.findFirst({
+        where: { name: { equals: name, mode: "insensitive" } },
+      });
+      if (existing) {
+        return existing;
+      }
+      return prisma.tag.create({ data: { name } });
+    }),
+  );
+}
+
+type CreatedMix = Mix & {
   artist: Artist;
   genres: Genre[];
   tags: Tag[];
-  periodUpvoteCount: number;
-  hasUpvoted: boolean;
 };
 
 const mixInclude = {
@@ -32,6 +91,38 @@ const mixInclude = {
   genres: true,
   tags: true,
 } as const;
+
+export const createMix: CreateMix<CreateMixInput, CreatedMix> = async (
+  rawArgs,
+  context,
+) => {
+  if (!context.user) {
+    throw new HttpError(401, "You must be logged in to submit a mix");
+  }
+
+  const args = ensureArgsSchemaOrThrowHttpError(createMixInputSchema, rawArgs);
+
+  const artist = await findOrCreateArtistByName(args.artistName);
+  const genres = await findOrCreateGenresByName(parseNameList(args.genres));
+  const tags = await findOrCreateTagsByName(parseNameList(args.tags));
+
+  return context.entities.Mix.create({
+    data: {
+      title: args.title,
+      link: args.link,
+      promoter: args.promoter || null,
+      description: args.description || null,
+      artist: { connect: { id: artist.id } },
+      genres: genres.length
+        ? { connect: genres.map((genre) => ({ id: genre.id })) }
+        : undefined,
+      tags: tags.length
+        ? { connect: tags.map((tag) => ({ id: tag.id })) }
+        : undefined,
+    },
+    include: mixInclude,
+  });
+};
 
 function getPeriodStart(period: PopularityPeriod): Date | null {
   const now = new Date();
@@ -44,9 +135,7 @@ function getPeriodStart(period: PopularityPeriod): Date | null {
     case "week":
       return new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
     case "month":
-      return new Date(
-        Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), 1),
-      );
+      return new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), 1));
     case "all":
       return null;
   }
@@ -59,27 +148,27 @@ export const ensureDemoMixes: EnsureDemoMixes<
   return ensureDemoMixesSeeded(prisma);
 };
 
-const toggleMixUpvoteInputSchema = z.object({
+const toggleMixFavouriteInputSchema = z.object({
   mixId: z.number().int().positive(),
 });
 
-type ToggleMixUpvoteInput = z.infer<typeof toggleMixUpvoteInputSchema>;
+type ToggleMixFavouriteInput = z.infer<typeof toggleMixFavouriteInputSchema>;
 
-type ToggleMixUpvoteResult = {
-  upvoted: boolean;
-  upvoteCount: number;
+type ToggleMixFavouriteResult = {
+  favourited: boolean;
+  favouriteCount: number;
 };
 
-export const toggleMixUpvote: ToggleMixUpvote<
-  ToggleMixUpvoteInput,
-  ToggleMixUpvoteResult
+export const toggleMixFavourite: ToggleMixFavourite<
+  ToggleMixFavouriteInput,
+  ToggleMixFavouriteResult
 > = async (rawArgs, context) => {
   if (!context.user) {
-    throw new HttpError(401, "You must be logged in to upvote");
+    throw new HttpError(401, "You must be logged in to favourite a mix");
   }
 
   const { mixId } = ensureArgsSchemaOrThrowHttpError(
-    toggleMixUpvoteInputSchema,
+    toggleMixFavouriteInputSchema,
     rawArgs,
   );
 
@@ -90,7 +179,7 @@ export const toggleMixUpvote: ToggleMixUpvote<
     throw new HttpError(404, "Mix not found");
   }
 
-  const existing = await context.entities.MixUpvote.findUnique({
+  const existing = await context.entities.MixFavourite.findUnique({
     where: {
       userId_mixId: {
         userId: context.user.id,
@@ -101,27 +190,27 @@ export const toggleMixUpvote: ToggleMixUpvote<
 
   if (existing) {
     const [, updatedMix] = await prisma.$transaction([
-      context.entities.MixUpvote.delete({
+      context.entities.MixFavourite.delete({
         where: { id: existing.id },
       }),
       context.entities.Mix.update({
         where: { id: mixId },
         data: {
-          upvoteCount: {
-            decrement: mix.upvoteCount > 0 ? 1 : 0,
+          favouriteCount: {
+            decrement: mix.favouriteCount > 0 ? 1 : 0,
           },
         },
       }),
     ]);
 
     return {
-      upvoted: false,
-      upvoteCount: Math.max(0, updatedMix.upvoteCount),
+      favourited: false,
+      favouriteCount: Math.max(0, updatedMix.favouriteCount),
     };
   }
 
   const [, updatedMix] = await prisma.$transaction([
-    context.entities.MixUpvote.create({
+    context.entities.MixFavourite.create({
       data: {
         user: { connect: { id: context.user.id } },
         mix: { connect: { id: mixId } },
@@ -129,13 +218,13 @@ export const toggleMixUpvote: ToggleMixUpvote<
     }),
     context.entities.Mix.update({
       where: { id: mixId },
-      data: { upvoteCount: { increment: 1 } },
+      data: { favouriteCount: { increment: 1 } },
     }),
   ]);
 
   return {
-    upvoted: true,
-    upvoteCount: updatedMix.upvoteCount,
+    favourited: true,
+    favouriteCount: updatedMix.favouriteCount,
   };
 };
 
@@ -164,7 +253,7 @@ export const getPopularMixes: GetPopularMixes<
         ...mixInclude,
         ...(userId
           ? {
-              upvotes: {
+              favourites: {
                 where: { userId },
                 select: { id: true },
                 take: 1,
@@ -172,23 +261,23 @@ export const getPopularMixes: GetPopularMixes<
             }
           : {}),
       },
-      orderBy: [{ upvoteCount: "desc" }, { createdAt: "desc" }],
+      orderBy: [{ favouriteCount: "desc" }, { createdAt: "desc" }],
       take: limit,
     });
 
     return mixes.map((mix) => {
-      const { upvotes, ...rest } = mix as typeof mix & {
-        upvotes?: { id: string }[];
+      const { favourites, ...rest } = mix as typeof mix & {
+        favourites?: { id: string }[];
       };
       return {
         ...rest,
-        periodUpvoteCount: rest.upvoteCount,
-        hasUpvoted: (upvotes?.length ?? 0) > 0,
+        periodFavouriteCount: rest.favouriteCount,
+        hasFavourited: (favourites?.length ?? 0) > 0,
       };
     });
   }
 
-  const grouped = await prisma.mixUpvote.groupBy({
+  const grouped = await prisma.mixFavourite.groupBy({
     by: ["mixId"],
     where: {
       createdAt: { gte: since! },
@@ -213,7 +302,7 @@ export const getPopularMixes: GetPopularMixes<
       ...mixInclude,
       ...(userId
         ? {
-            upvotes: {
+            favourites: {
               where: { userId },
               select: { id: true },
               take: 1,
@@ -231,16 +320,138 @@ export const getPopularMixes: GetPopularMixes<
       return [];
     }
 
-    const { upvotes, ...rest } = mix as typeof mix & {
-      upvotes?: { id: string }[];
+    const { favourites, ...rest } = mix as typeof mix & {
+      favourites?: { id: string }[];
     };
 
     return [
       {
         ...rest,
-        periodUpvoteCount: countByMixId.get(mixId) ?? 0,
-        hasUpvoted: (upvotes?.length ?? 0) > 0,
+        periodFavouriteCount: countByMixId.get(mixId) ?? 0,
+        hasFavourited: (favourites?.length ?? 0) > 0,
       },
     ];
+  });
+};
+
+const getArtistMixesInputSchema = z.object({
+  artistId: z.number().int().positive(),
+});
+
+type GetArtistMixesInput = z.infer<typeof getArtistMixesInputSchema>;
+
+export const getArtistMixes: GetArtistMixes<
+  GetArtistMixesInput,
+  ArtistMixesResult
+> = async (rawArgs, context) => {
+  const { artistId } = ensureArgsSchemaOrThrowHttpError(
+    getArtistMixesInputSchema,
+    rawArgs,
+  );
+
+  const artist = await context.entities.Artist.findUnique({
+    where: { id: artistId },
+  });
+  if (!artist) {
+    throw new HttpError(404, "Artist not found");
+  }
+
+  const userId = context.user?.id;
+
+  const mixes = await context.entities.Mix.findMany({
+    where: { artistId },
+    include: {
+      ...mixInclude,
+      ...(userId
+        ? {
+            favourites: {
+              where: { userId },
+              select: { id: true },
+              take: 1,
+            },
+          }
+        : {}),
+    },
+    orderBy: [{ favouriteCount: "desc" }, { createdAt: "desc" }],
+  });
+
+  return {
+    artist,
+    mixes: mixes.map((mix) => {
+      const { favourites, ...rest } = mix as typeof mix & {
+        favourites?: { id: string }[];
+      };
+      return {
+        ...rest,
+        hasFavourited: (favourites?.length ?? 0) > 0,
+      } satisfies ArtistMix;
+    }),
+  };
+};
+
+export const getMyFavouriteMixes: GetMyFavouriteMixes<
+  void,
+  ArtistMix[]
+> = async (_args, context) => {
+  if (!context.user) {
+    throw new HttpError(401, "You must be logged in to view favourites");
+  }
+
+  const favourites = await context.entities.MixFavourite.findMany({
+    where: { userId: context.user.id },
+    orderBy: { createdAt: "desc" },
+    include: {
+      mix: {
+        include: mixInclude,
+      },
+    },
+  });
+
+  return favourites.map(({ mix }) => ({
+    ...mix,
+    hasFavourited: true,
+  }));
+};
+
+const getMixLinkPreviewInputSchema = z.object({
+  link: z.url(),
+});
+
+type GetMixLinkPreviewInput = z.infer<typeof getMixLinkPreviewInputSchema>;
+
+export const getMixLinkPreview: GetMixLinkPreview<
+  GetMixLinkPreviewInput,
+  MixLinkPreviewResult
+> = async (rawArgs, _context) => {
+  const { link } = ensureArgsSchemaOrThrowHttpError(
+    getMixLinkPreviewInputSchema,
+    rawArgs,
+  );
+
+  if (!isAllowedMixLink(link)) {
+    throw new HttpError(
+      400,
+      "Link must be a YouTube, SoundCloud, or Mixcloud URL",
+    );
+  }
+
+  return fetchMixLinkPreview(link);
+};
+
+export const searchArtists: SearchArtists<
+  SearchArtistsInput,
+  Artist[]
+> = async (rawArgs, context) => {
+  const { query } = ensureArgsSchemaOrThrowHttpError(
+    searchArtistsInputSchema,
+    rawArgs,
+  );
+
+  return context.entities.Artist.findMany({
+    where: query
+      ? { name: { contains: query, mode: "insensitive" } }
+      : undefined,
+    orderBy: { name: "asc" },
+    take: 15,
   });
 };

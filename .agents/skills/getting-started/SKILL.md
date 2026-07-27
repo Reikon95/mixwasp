@@ -1,6 +1,6 @@
 ---
 name: getting-started
-description: Get started with your Open SaaS project — fetches docs, checks Wasp installation, and helps you start your database and app.
+description: Get started with your Open SaaS project - fetches docs, checks Wasp installation, and helps you start your database and app.
 user_invocable: true
 ---
 

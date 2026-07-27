@@ -1,19 +1,16 @@
 import {
   Calendar,
-  ChevronDown,
-  ChevronUp,
   LayoutDashboard,
   LayoutTemplate,
   Settings,
   Sheet,
   X,
 } from "lucide-react";
-import React, { useEffect, useRef, useState } from "react";
-import { NavLink, useLocation } from "react-router";
+import { useEffect, useRef, useState } from "react";
+import { NavLink } from "react-router";
 import { Link, routes } from "wasp/client/router";
-import Logo from "../../client/static/logo.webp";
+import Logo from "../../client/static/mixwaspnobg.png";
 import { cn } from "../../client/utils";
-import { SidebarLinkGroup } from "./SidebarLinkGroup";
 
 interface SidebarProps {
   sidebarOpen: boolean;
@@ -21,9 +18,6 @@ interface SidebarProps {
 }
 
 export function Sidebar({ sidebarOpen, setSidebarOpen }: SidebarProps) {
-  const location = useLocation();
-  const { pathname } = location;
-
   const trigger = useRef<HTMLButtonElement>(null);
   const sidebar = useRef<HTMLElement>(null);
 
@@ -80,8 +74,8 @@ export function Sidebar({ sidebarOpen, setSidebarOpen }: SidebarProps) {
     >
       {/* <!-- SIDEBAR HEADER --> */}
       <div className="py-5.5 lg:py-6.5 flex items-center justify-between gap-2 px-6">
-        <Link to={routes.LandingPageRoute.to}>
-          <img src={Logo} alt="Logo" width={50} />
+        <Link to={routes.MixesRoute.to}>
+          <img src={Logo} alt="MixWasp" width={50} />
         </Link>
 
         <button
@@ -194,64 +188,25 @@ export function Sidebar({ sidebarOpen, setSidebarOpen }: SidebarProps) {
               </li>
               {/* <!-- Menu Item Calendar --> */}
 
-              {/* <!-- Menu Item Ui Elements --> */}
-              <SidebarLinkGroup
-                activeCondition={pathname === "/ui" || pathname.includes("ui")}
-              >
-                {(handleClick, open) => {
-                  return (
-                    <React.Fragment>
-                      <NavLink
-                        to="#"
-                        className={cn(
-                          "text-muted-foreground hover:bg-accent hover:text-accent-foreground group relative flex items-center gap-2.5 rounded-sm px-4 py-2 font-medium duration-300 ease-in-out",
-                          {
-                            "bg-accent text-accent-foreground":
-                              pathname.includes("ui"),
-                          },
-                        )}
-                        onClick={(e) => {
-                          e.preventDefault();
-                          if (sidebarExpanded) {
-                            handleClick();
-                          } else {
-                            setSidebarExpanded(true);
-                          }
-                        }}
-                      >
-                        <LayoutTemplate />
-                        UI Elements
-                        {open ? <ChevronUp /> : <ChevronDown />}
-                      </NavLink>
-                      {/* <!-- Dropdown Menu Start --> */}
-                      <div
-                        className={cn("translate transform overflow-hidden", {
-                          hidden: !open,
-                        })}
-                      >
-                        <ul className="mb-5.5 mt-4 flex flex-col gap-2.5 pl-6">
-                          <li>
-                            <NavLink
-                              to={routes.AdminUIButtonsRoute.to}
-                              end
-                              className={({ isActive }) =>
-                                cn(
-                                  "text-muted-foreground hover:text-accent group relative flex items-center gap-2.5 rounded-md px-4 font-medium duration-300 ease-in-out",
-                                  { "text-accent!": isActive },
-                                )
-                              }
-                            >
-                              Buttons
-                            </NavLink>
-                          </li>
-                        </ul>
-                      </div>
-                      {/* <!-- Dropdown Menu End --> */}
-                    </React.Fragment>
-                  );
-                }}
-              </SidebarLinkGroup>
-              {/* <!-- Menu Item Ui Elements --> */}
+              {/* <!-- Menu Item UI Library --> */}
+              <li>
+                <NavLink
+                  to={routes.AdminUiLibraryRoute.to}
+                  end
+                  className={({ isActive }) =>
+                    cn(
+                      "text-muted-foreground hover:bg-accent hover:text-accent-foreground group relative flex items-center gap-2.5 rounded-sm px-4 py-2 font-medium duration-300 ease-in-out",
+                      {
+                        "bg-accent text-accent-foreground": isActive,
+                      },
+                    )
+                  }
+                >
+                  <LayoutTemplate />
+                  UI Library
+                </NavLink>
+              </li>
+              {/* <!-- Menu Item UI Library --> */}
             </ul>
           </div>
         </nav>

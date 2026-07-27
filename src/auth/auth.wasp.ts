@@ -27,7 +27,7 @@ import {
 
 const emailAuthMethod: NonNullable<AuthMethods["email"]> = {
   fromField: {
-    name: "Open SaaS App",
+    name: "MixWasp",
     email: "me@example.com",
   },
   emailVerification: {
@@ -80,7 +80,7 @@ export const authConfig: Auth = {
     // discord: discordAuthMethod,
   },
   onAuthFailedRedirectTo: "/login",
-  onAuthSucceededRedirectTo: "/mixes",
+  onAuthSucceededRedirectTo: "/",
 };
 
 export const authSpec: Spec = [

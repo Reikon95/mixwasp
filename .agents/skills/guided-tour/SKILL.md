@@ -1,6 +1,6 @@
 ---
 name: guided-tour
-description: Take a guided tour of Open SaaS — walks you through step-by-step through the project structure, features, and customization checklist.
+description: Take a guided tour of Open SaaS - walks you through step-by-step through the project structure, features, and customization checklist.
 user_invocable: true
 ---
 
@@ -25,4 +25,4 @@ Guide the user through the Guided Tour document section by section:
 3. After each major section, pause and ask the user if they have any questions before moving on.
 4. If the user asks a question, answer it using the guide content, the project's code, or by fetching additional documentation from the docs map if needed.
 
-Keep the pace comfortable — don't rush through sections. The goal is for the user to understand their project, not just read documentation.
+Keep the pace comfortable - don't rush through sections. The goal is for the user to understand their project, not just read documentation.

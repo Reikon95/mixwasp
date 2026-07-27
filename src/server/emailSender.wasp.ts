@@ -6,7 +6,7 @@ export const emailSender: EmailSender = {
   //   Once you are ready for production, switch to e.g. "SendGrid" or "Mailgun" providers. Check out https://docs.opensaas.sh/guides/email-sending/ .
   provider: "Dummy",
   defaultFrom: {
-    name: "Open SaaS App",
+    name: "MixWasp",
     // When using a real provider, e.g. SendGrid, you must use the same email address that you configured your account to send out emails with!
     email: "me@example.com",
   },

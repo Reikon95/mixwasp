@@ -13,11 +13,9 @@ import {
 import { throttleWithTrailingInvocation } from "../../../shared/utils";
 import { UserDropdown } from "../../../user/UserDropdown";
 import { UserMenuItems } from "../../../user/UserMenuItems";
-import { useIsLandingPage } from "../../hooks/useIsLandingPage";
-import logo from "../../static/logo.webp";
+import logo from "../../static/mixwaspnobg.png";
 import { cn } from "../../utils";
 import { DarkModeSwitcher } from "../DarkModeSwitcher";
-import { Announcement } from "./Announcement";
 
 export interface NavigationItem {
   name: string;
@@ -30,7 +28,6 @@ export function NavBar({
   navigationItems: NavigationItem[];
 }) {
   const [isScrolled, setIsScrolled] = useState(false);
-  const isLandingPage = useIsLandingPage();
 
   useEffect(() => {
     const throttledHandler = throttleWithTrailingInvocation(() => {
@@ -47,7 +44,6 @@ export function NavBar({
 
   return (
     <>
-      {isLandingPage && <Announcement />}
       <header
         className={cn(
           "sticky top-0 z-50 transition-all duration-300",
@@ -74,7 +70,7 @@ export function NavBar({
           >
             <div className="flex items-center gap-6">
               <WaspRouterLink
-                to={routes.LandingPageRoute.to}
+                to={routes.MixesRoute.to}
                 className="text-foreground hover:text-primary flex items-center transition-colors duration-300 ease-in-out"
               >
                 <NavLogo isScrolled={isScrolled} />
@@ -87,7 +83,7 @@ export function NavBar({
                     },
                   )}
                 >
-                  Your SaaS
+                  MixWasp
                 </span>
               </WaspRouterLink>
 
@@ -179,8 +175,8 @@ function NavBarMobileMenu({
         <SheetContent side="right" className="w-[300px] sm:w-[400px]">
           <SheetHeader>
             <SheetTitle className="flex items-center">
-              <WaspRouterLink to={routes.LandingPageRoute.to}>
-                <span className="sr-only">Your SaaS</span>
+              <WaspRouterLink to={routes.MixesRoute.to}>
+                <span className="sr-only">MixWasp</span>
                 <NavLogo isScrolled={false} />
               </WaspRouterLink>
             </SheetTitle>
@@ -252,7 +248,7 @@ function NavLogo({ isScrolled }: { isScrolled: boolean }) {
         "size-7": isScrolled,
       })}
       src={logo}
-      alt="Your SaaS App"
+      alt="MixWasp"
     />
   );
 }

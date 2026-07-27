@@ -4,10 +4,7 @@ import { routes } from "wasp/client/router";
 import { Toaster } from "../client/components/ui/toaster";
 import "./Main.css";
 import { NavBar } from "./components/NavBar/NavBar";
-import {
-  demoNavigationitems,
-  marketingNavigationItems,
-} from "./components/NavBar/constants";
+import { appNavigationItems } from "./components/NavBar/constants";
 import { CookieConsentBanner } from "./components/cookie-consent/Banner";
 
 /**
@@ -16,16 +13,6 @@ import { CookieConsentBanner } from "./components/cookie-consent/Banner";
  */
 export function App() {
   const location = useLocation();
-  const isMarketingPage = useMemo(() => {
-    return (
-      location.pathname === routes.LandingPageRoute.to ||
-      location.pathname === routes.PricingPageRoute.to
-    );
-  }, [location]);
-
-  const navigationItems = isMarketingPage
-    ? marketingNavigationItems
-    : demoNavigationitems;
 
   const shouldDisplayAppNavBar = useMemo(() => {
     return (
@@ -56,7 +43,7 @@ export function App() {
         ) : (
           <>
             {shouldDisplayAppNavBar && (
-              <NavBar navigationItems={navigationItems} />
+              <NavBar navigationItems={appNavigationItems} />
             )}
             <div className="max-w-(--breakpoint-2xl) mx-auto">
               <Outlet />

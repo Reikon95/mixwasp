@@ -1,4 +1,6 @@
-# <YOUR_APP_NAME>
+# MixWasp
+
+Discover, favourite, and share the best DJ mixes.
 
 Built with [Wasp](https://wasp.sh), based on the [Open Saas](https://opensaas.sh) template.
 
