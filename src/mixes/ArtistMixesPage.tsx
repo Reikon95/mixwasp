@@ -8,6 +8,7 @@ import { useParams } from "react-router";
 import { Button } from "../client/components/ui/button";
 import { MixWaspLoader } from "../client/components/MixWaspLoader";
 import { toast } from "../client/hooks/use-toast";
+import { MixFeed } from "./MixFeed";
 import { MixRow } from "./MixRow";
 
 export function ArtistMixesPage() {
@@ -86,11 +87,11 @@ export function ArtistMixesPage() {
 
         {data && (
           <>
-            <header className="mb-8">
-              <h1 className="text-4xl font-semibold tracking-tight sm:text-5xl">
+            <header className="mb-6">
+              <h1 className="text-2xl font-semibold tracking-tight sm:text-3xl">
                 {data.artist.name}
               </h1>
-              <p className="text-muted-foreground mt-3 text-base">
+              <p className="text-muted-foreground mt-1 text-sm">
                 {data.mixes.length === 1
                   ? "1 mix on MixWasp"
                   : `${data.mixes.length} mixes on MixWasp`}
@@ -98,26 +99,28 @@ export function ArtistMixesPage() {
             </header>
 
             {data.mixes.length === 0 ? (
-              <div className="border-border rounded-lg border border-dashed px-6 py-12 text-center">
+              <div className="border-border rounded-md border border-dashed px-6 py-12 text-center">
                 <p className="font-medium">No mixes yet</p>
                 <p className="text-muted-foreground mt-2 text-sm">
                   This artist hasn&apos;t been linked to any mixes.
                 </p>
               </div>
             ) : (
-              <ol className="space-y-3">
-                {data.mixes.map((mix) => (
-                  <MixRow
-                    key={mix.id}
-                    mix={mix}
-                    favouriteCount={mix.favouriteCount}
-                    isLoggedIn={!!user}
-                    isToggling={togglingMixId === mix.id}
-                    onToggle={() => handleToggleFavourite(mix.id)}
-                    showArtist={false}
-                  />
-                ))}
-              </ol>
+              <MixFeed>
+                <ol>
+                  {data.mixes.map((mix) => (
+                    <MixRow
+                      key={mix.id}
+                      mix={mix}
+                      favouriteCount={mix.favouriteCount}
+                      isLoggedIn={!!user}
+                      isToggling={togglingMixId === mix.id}
+                      onToggle={() => handleToggleFavourite(mix.id)}
+                      showArtist={false}
+                    />
+                  ))}
+                </ol>
+              </MixFeed>
             )}
           </>
         )}

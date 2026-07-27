@@ -13,6 +13,7 @@ import { Button } from "../client/components/ui/button";
 import { MixWaspLoader } from "../client/components/MixWaspLoader";
 import { toast } from "../client/hooks/use-toast";
 import { cn } from "../client/utils";
+import { MixFeed } from "./MixFeed";
 import { MixRow } from "./MixRow";
 import type { PopularityPeriod } from "./schemas";
 
@@ -92,20 +93,19 @@ export function MixesPage() {
     !isLoading && !isSeeding && mixes !== undefined && mixes.length === 0;
 
   return (
-    <main className="mixes-page px-4 py-10 sm:px-6 lg:px-8">
+    <main className="mixes-page px-4 py-8 sm:px-6 sm:py-10 lg:px-8">
       <div className="mx-auto max-w-4xl">
-        <header className="mixes-page__intro mb-10 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+        <header className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <div>
-            <h1 className="text-4xl font-semibold tracking-tight sm:text-5xl">
-              What&apos;s getting played
+            <h1 className="text-2xl font-semibold tracking-tight sm:text-3xl">
+              Charts
             </h1>
-            <p className="text-muted-foreground mt-3 max-w-xl text-base leading-relaxed">
-              Browse the community&apos;s favorite sets. Filter by when people
-              favourited them, then heart the ones you keep coming back to.
+            <p className="text-muted-foreground mt-1 text-sm">
+              Top mixes by favourites — heart the ones you keep coming back to.
             </p>
           </div>
           {user ? (
-            <Button asChild className="shrink-0 self-start sm:self-auto">
+            <Button asChild size="sm" className="shrink-0 self-start sm:self-auto">
               <WaspRouterLink to={routes.SubmitMixRoute.to}>
                 <Plus className="size-4" aria-hidden />
                 Submit mix
@@ -115,6 +115,7 @@ export function MixesPage() {
             <Button
               asChild
               variant="outline"
+              size="sm"
               className="shrink-0 self-start sm:self-auto"
             >
               <WaspRouterLink to={routes.LoginRoute.to}>
@@ -125,7 +126,7 @@ export function MixesPage() {
         </header>
 
         <div
-          className="mixes-page__periods mb-8 flex flex-wrap gap-2"
+          className="border-border mb-6 flex gap-1 overflow-x-auto border-b sm:gap-4"
           role="tablist"
           aria-label="Popularity period"
         >
@@ -137,10 +138,10 @@ export function MixesPage() {
               aria-selected={period === item.value}
               onClick={() => setPeriod(item.value)}
               className={cn(
-                "rounded-md px-3 py-1.5 text-sm font-medium transition-colors",
+                "-mb-px shrink-0 border-b-2 px-3 py-2.5 text-sm font-medium whitespace-nowrap transition-colors",
                 period === item.value
-                  ? "bg-foreground text-background"
-                  : "bg-muted text-muted-foreground hover:text-foreground",
+                  ? "border-primary text-foreground"
+                  : "text-muted-foreground hover:text-foreground border-transparent",
               )}
             >
               {item.label}
@@ -161,7 +162,7 @@ export function MixesPage() {
         )}
 
         {showEmptyPeriod && (
-          <div className="border-border rounded-lg border border-dashed px-6 py-12 text-center">
+          <div className="border-border rounded-md border border-dashed px-6 py-12 text-center">
             <p className="font-medium">No favourites in this period yet</p>
             <p className="text-muted-foreground mt-2 text-sm">
               Switch to All time, or log in and heart a mix to get this
@@ -170,6 +171,7 @@ export function MixesPage() {
             <Button
               type="button"
               variant="outline"
+              size="sm"
               className="mt-4"
               onClick={() => setPeriod("all")}
             >
@@ -179,23 +181,25 @@ export function MixesPage() {
         )}
 
         {mixes && mixes.length > 0 && (
-          <ol className="mixes-page__list space-y-3">
-            {mixes.map((mix, index) => (
-              <MixRow
-                key={mix.id}
-                mix={mix}
-                rank={index + 1}
-                favouriteCount={mix.periodFavouriteCount}
-                isLoggedIn={!!user}
-                isToggling={togglingMixId === mix.id}
-                onToggle={() => handleToggleFavourite(mix.id)}
-              />
-            ))}
-          </ol>
+          <MixFeed>
+            <ol className="mixes-page__list">
+              {mixes.map((mix, index) => (
+                <MixRow
+                  key={mix.id}
+                  mix={mix}
+                  rank={index + 1}
+                  favouriteCount={mix.periodFavouriteCount}
+                  isLoggedIn={!!user}
+                  isToggling={togglingMixId === mix.id}
+                  onToggle={() => handleToggleFavourite(mix.id)}
+                />
+              ))}
+            </ol>
+          </MixFeed>
         )}
 
         {!user && (
-          <p className="text-muted-foreground mt-8 text-center text-sm">
+          <p className="text-muted-foreground mt-6 text-center text-sm">
             <WaspRouterLink
               to={routes.LoginRoute.to}
               className="text-foreground underline-offset-4 hover:underline"

@@ -11,6 +11,7 @@ import { useState } from "react";
 import { Button } from "../client/components/ui/button";
 import { MixWaspLoader } from "../client/components/MixWaspLoader";
 import { toast } from "../client/hooks/use-toast";
+import { MixFeed } from "./MixFeed";
 import { MixRow } from "./MixRow";
 
 export function FavouriteMixesPage() {
@@ -97,18 +98,20 @@ export function FavouriteMixesPage() {
         )}
 
         {mixes && mixes.length > 0 && (
-          <ol className="space-y-3">
-            {mixes.map((mix) => (
-              <MixRow
-                key={mix.id}
-                mix={mix}
-                favouriteCount={mix.favouriteCount}
-                isLoggedIn={!!user}
-                isToggling={togglingMixId === mix.id}
-                onToggle={() => handleToggleFavourite(mix.id)}
-              />
-            ))}
-          </ol>
+          <MixFeed>
+            <ol>
+              {mixes.map((mix) => (
+                <MixRow
+                  key={mix.id}
+                  mix={mix}
+                  favouriteCount={mix.favouriteCount}
+                  isLoggedIn={!!user}
+                  isToggling={togglingMixId === mix.id}
+                  onToggle={() => handleToggleFavourite(mix.id)}
+                />
+              ))}
+            </ol>
+          </MixFeed>
         )}
       </div>
     </main>
