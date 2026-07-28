@@ -67,7 +67,7 @@ model Mix {
   title                    String
   artist                   Artist          @relation(fields: [artistId], references: [id])
   artistId                 Int
-  link                     String
+  link                     String          @unique
   promoter                 String?
   description              String?
   genres                   Genre[]

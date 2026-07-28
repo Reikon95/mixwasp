@@ -43,53 +43,57 @@ export function NavBar({
   }, []);
 
   return (
-    <>
-      <header
-        className={cn(
-          "sticky top-0 z-50 transition-all duration-300",
-          isScrolled && "top-4",
-        )}
+    <header
+      className={cn(
+        "sticky top-0 z-50 transition-all duration-300",
+        isScrolled && "top-3",
+      )}
+    >
+      <div
+        className={cn("transition-all duration-300", {
+          "nav-terminal nav-terminal--scrolled mx-3 rounded-sm md:mx-12":
+            isScrolled,
+          "nav-terminal mx-0": !isScrolled,
+        })}
       >
-        <div
-          className={cn("transition-all duration-300", {
-            "bg-background/90 border-border mx-4 rounded-full border pr-2 shadow-lg backdrop-blur-lg md:mx-20 lg:pr-0":
-              isScrolled,
-            "bg-background/80 border-border mx-0 border-b backdrop-blur-lg":
-              !isScrolled,
-          })}
+        <nav
+          className={cn(
+            "flex items-center justify-between transition-all duration-300",
+            {
+              "px-3 py-2.5 lg:px-5": isScrolled,
+              "px-4 py-4 sm:px-6 lg:px-8": !isScrolled,
+            },
+          )}
+          aria-label="Global"
         >
-          <nav
-            className={cn(
-              "flex items-center justify-between transition-all duration-300",
-              {
-                "p-3 lg:px-6": isScrolled,
-                "p-6 lg:px-8": !isScrolled,
-              },
-            )}
-            aria-label="Global"
-          >
-            <div className="flex items-center gap-6">
-              <WaspRouterLink
-                to={routes.MixesRoute.to}
-                className="text-foreground hover:text-primary flex items-center transition-colors duration-300 ease-in-out"
+          <div className="flex items-center gap-5">
+            <WaspRouterLink
+              to={routes.MixesRoute.to}
+              className="group flex items-center gap-2.5 transition-opacity hover:opacity-90"
+            >
+              <NavLogo isScrolled={isScrolled} />
+              <span
+                className={cn(
+                  "brand-wordmark hidden sm:inline",
+                  isScrolled ? "text-sm" : "text-base",
+                )}
               >
-                <NavLogo isScrolled={isScrolled} />
+                MixWasp
+              </span>
+            </WaspRouterLink>
 
-              </WaspRouterLink>
-
-              <ul className="ml-4 hidden items-center gap-6 lg:flex">
-                {renderNavigationItems(navigationItems)}
-              </ul>
-            </div>
-            <NavBarMobileMenu
-              isScrolled={isScrolled}
-              navigationItems={navigationItems}
-            />
-            <NavBarDesktopUserDropdown isScrolled={isScrolled} />
-          </nav>
-        </div>
-      </header>
-    </>
+            <ul className="ml-2 hidden items-center gap-1 lg:flex">
+              {renderNavigationItems(navigationItems)}
+            </ul>
+          </div>
+          <NavBarMobileMenu
+            isScrolled={isScrolled}
+            navigationItems={navigationItems}
+          />
+          <NavBarDesktopUserDropdown isScrolled={isScrolled} />
+        </nav>
+      </div>
+    </header>
   );
 }
 
@@ -98,35 +102,20 @@ function NavBarDesktopUserDropdown({ isScrolled }: { isScrolled: boolean }) {
 
   return (
     <div className="hidden items-center justify-end gap-3 lg:flex lg:flex-1">
-      <ul className="flex items-center justify-center gap-2 sm:gap-4">
-        <DarkModeSwitcher />
-      </ul>
+      <DarkModeSwitcher />
       {isUserLoading ? null : !user ? (
         <WaspRouterLink
           to={routes.LoginRoute.to}
           className={cn(
-            "ml-3 font-semibold leading-6 transition-all duration-300",
-            {
-              "text-sm": !isScrolled,
-              "text-xs": isScrolled,
-            },
+            "border-primary/40 text-primary hover:bg-primary/10 hover:border-primary inline-flex items-center gap-1.5 border px-3 py-1.5 font-medium tracking-wider uppercase transition-colors",
+            isScrolled ? "text-xs" : "text-sm",
           )}
         >
-          <div className="text-foreground hover:text-primary flex items-center transition-colors duration-300 ease-in-out">
-            Log in{" "}
-            <LogIn
-              size={isScrolled ? "1rem" : "1.1rem"}
-              className={cn("transition-all duration-300", {
-                "ml-1 mt-[0.1rem]": !isScrolled,
-                "ml-1": isScrolled,
-              })}
-            />
-          </div>
+          Log in
+          <LogIn size={isScrolled ? "0.9rem" : "1rem"} aria-hidden />
         </WaspRouterLink>
       ) : (
-        <div className="ml-3">
-          <UserDropdown user={user} />
-        </div>
+        <UserDropdown user={user} />
       )}
     </div>
   );
@@ -148,38 +137,42 @@ function NavBarMobileMenu({
         <SheetTrigger asChild>
           <button
             type="button"
-            className={cn(
-              "text-muted-foreground hover:text-muted hover:bg-accent inline-flex items-center justify-center rounded-md transition-colors",
-            )}
+            className="text-primary hover:bg-primary/10 border-primary/30 inline-flex items-center justify-center rounded-sm border p-1 transition-colors"
           >
             <span className="sr-only">Open main menu</span>
             <Menu
               className={cn("transition-all duration-300", {
-                "size-8 p-1": !isScrolled,
+                "size-7 p-0.5": !isScrolled,
                 "size-6 p-0.5": isScrolled,
               })}
               aria-hidden="true"
             />
           </button>
         </SheetTrigger>
-        <SheetContent side="right" className="w-[300px] sm:w-[400px]">
+        <SheetContent
+          side="right"
+          className="border-border bg-background/95 w-[300px] backdrop-blur-md sm:w-[400px]"
+        >
           <SheetHeader>
-            <SheetTitle className="flex items-center">
-              <WaspRouterLink to={routes.MixesRoute.to}>
-                <span className="sr-only">MixWasp</span>
+            <SheetTitle className="flex items-center gap-2">
+              <WaspRouterLink
+                to={routes.MixesRoute.to}
+                className="flex items-center gap-2"
+              >
                 <NavLogo isScrolled={false} />
+                <span className="brand-wordmark text-sm">MixWasp</span>
               </WaspRouterLink>
             </SheetTitle>
           </SheetHeader>
           <div className="mt-6 flow-root">
             <div className="divide-border -my-6 divide-y">
-              <ul className="space-y-2 py-6">
+              <ul className="space-y-1 py-6">
                 {renderNavigationItems(navigationItems, setMobileMenuOpen)}
               </ul>
               <div className="py-6">
                 {isUserLoading ? null : !user ? (
                   <WaspRouterLink to={routes.LoginRoute.to}>
-                    <div className="text-foreground hover:text-primary flex items-center justify-end transition-colors duration-300 ease-in-out">
+                    <div className="text-primary flex items-center justify-end tracking-wider uppercase transition-colors">
                       Log in <LogIn size="1.1rem" className="ml-1" />
                     </div>
                   </WaspRouterLink>
@@ -208,9 +201,9 @@ function renderNavigationItems(
   setMobileMenuOpen?: Dispatch<SetStateAction<boolean>>,
 ) {
   const menuStyles = cn({
-    "block rounded-lg px-3 py-2 text-sm font-medium leading-7 text-foreground hover:bg-accent hover:text-accent-foreground transition-colors":
+    "block rounded-sm px-3 py-2 text-sm font-medium tracking-wider uppercase text-foreground hover:bg-primary/10 hover:text-primary transition-colors":
       !!setMobileMenuOpen,
-    "text-sm font-normal leading-6 text-foreground duration-300 ease-in-out hover:text-primary transition-colors":
+    "px-3 py-1.5 text-xs font-medium tracking-wider uppercase text-muted-foreground duration-300 ease-in-out hover:text-primary transition-colors":
       !setMobileMenuOpen,
   });
 
@@ -234,11 +227,12 @@ function NavLogo({ isScrolled }: { isScrolled: boolean }) {
   return (
     <img
       className={cn("transition-all duration-500", {
-        "size-8": !isScrolled,
-        "size-7": isScrolled,
+        "size-9": !isScrolled,
+        "size-8": isScrolled,
       })}
       src={logo}
-      alt="MixWasp"
+      alt=""
+      aria-hidden
     />
   );
 }

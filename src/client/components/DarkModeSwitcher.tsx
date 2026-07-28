@@ -11,7 +11,7 @@ export function DarkModeSwitcher() {
     <div>
       <Label
         className={cn(
-          "bg-muted h-7.5 relative m-0 block w-14 cursor-pointer rounded-full transition-colors duration-300 ease-in-out",
+          "bg-muted border-primary/20 h-7.5 relative m-0 block w-14 cursor-pointer rounded-sm border transition-colors duration-300 ease-in-out",
         )}
       >
         <input
@@ -27,7 +27,7 @@ export function DarkModeSwitcher() {
         />
         <span
           className={cn(
-            "border-border absolute left-[3px] top-1/2 flex h-6 w-6 -translate-y-1/2 translate-x-0 items-center justify-center rounded-full border bg-white shadow-md transition-all duration-300 ease-in-out",
+            "border-primary/30 absolute left-[3px] top-1/2 flex h-6 w-6 -translate-y-1/2 translate-x-0 items-center justify-center rounded-sm border bg-card shadow-md transition-all duration-300 ease-in-out",
             {
               "right-[3px]! translate-x-full!": !isInLightMode,
             },
@@ -48,12 +48,12 @@ function ModeIcon({ isInLightMode }: { isInLightMode: boolean }) {
       <span
         className={cn(iconStyle, isInLightMode ? "opacity-100" : "opacity-0")}
       >
-        <Sun className="size-4 fill-amber-500 stroke-amber-500" />
+        <Sun className="text-warning size-4" />
       </span>
       <span
         className={cn(iconStyle, !isInLightMode ? "opacity-100" : "opacity-0")}
       >
-        <Moon className="size-4 fill-slate-600 stroke-slate-600" />
+        <Moon className="text-primary size-4" />
       </span>
     </>
   );

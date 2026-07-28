@@ -6,6 +6,7 @@ import "./Main.css";
 import { NavBar } from "./components/NavBar/NavBar";
 import { appNavigationItems } from "./components/NavBar/constants";
 import { CookieConsentBanner } from "./components/cookie-consent/Banner";
+import { useColorMode } from "./hooks/useColorMode";
 
 /**
  * use this component to wrap all child components
@@ -13,6 +14,8 @@ import { CookieConsentBanner } from "./components/cookie-consent/Banner";
  */
 export function App() {
   const location = useLocation();
+  // Ensure theme class is applied on first paint for non-auth pages too.
+  useColorMode();
 
   const shouldDisplayAppNavBar = useMemo(() => {
     return (
@@ -37,7 +40,7 @@ export function App() {
 
   return (
     <>
-      <div className="bg-background text-foreground min-h-screen">
+      <div className="app-shell text-foreground min-h-screen">
         {isAdminDashboard ? (
           <Outlet />
         ) : (

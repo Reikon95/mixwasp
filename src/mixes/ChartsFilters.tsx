@@ -79,7 +79,7 @@ function FilterPickCombobox({
             aria-expanded={open}
             onClick={() => setOpen(true)}
             className={cn(
-              "border-input bg-background hover:bg-muted/40 flex h-9 w-full items-center justify-between rounded-md border px-3 text-left text-sm shadow-sm transition-colors",
+              "border-input bg-card/40 hover:border-primary/40 hover:bg-primary/5 flex h-9 w-full items-center justify-between rounded-sm border px-3 text-left text-sm shadow-sm transition-colors",
               !valueName && "text-muted-foreground",
             )}
           >

@@ -80,13 +80,17 @@ export function MixesPage() {
   return (
     <main className="mixes-page px-4 py-8 sm:px-6 sm:py-10 lg:px-8">
       <div className="mx-auto max-w-4xl">
-        <header className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <header className="mixes-page__intro mb-6 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
           <div>
-            <h1 className="text-2xl font-semibold tracking-tight sm:text-3xl">
+            <p className="text-primary/70 mb-1 text-[11px] tracking-[0.25em] uppercase">
+              // signal_rank
+            </p>
+            <h1 className="text-phosphor terminal-cursor text-2xl font-bold tracking-[0.12em] sm:text-3xl">
               Charts
             </h1>
-            <p className="text-muted-foreground mt-1 text-sm">
-              Top mixes by favourites - heart the ones you keep coming back to.
+            <p className="text-muted-foreground mt-2 max-w-md text-sm leading-relaxed">
+              Top mixes by favourites — jack in and heart the sets you keep
+              looping.
             </p>
           </div>
           {user ? (
@@ -111,7 +115,7 @@ export function MixesPage() {
         </header>
 
         <div
-          className="border-border mb-4 flex gap-1 overflow-x-auto overflow-y-hidden border-b sm:gap-4"
+          className="mixes-page__periods border-border mb-4 flex gap-1 overflow-x-auto overflow-y-hidden border-b sm:gap-2"
           role="tablist"
           aria-label="Popularity period"
         >
@@ -123,10 +127,10 @@ export function MixesPage() {
               aria-selected={period === item.value}
               onClick={() => setPeriod(item.value)}
               className={cn(
-                "-mb-px shrink-0 border-b-2 px-3 py-2.5 text-sm font-medium whitespace-nowrap transition-colors",
+                "-mb-px shrink-0 border-b-2 px-3 py-2.5 text-xs font-medium tracking-wider whitespace-nowrap uppercase transition-colors",
                 period === item.value
-                  ? "border-primary text-foreground"
-                  : "text-muted-foreground hover:text-foreground border-transparent",
+                  ? "border-primary text-primary shadow-[0_0_16px_hsl(var(--glow)/0.25)]"
+                  : "text-muted-foreground hover:text-primary border-transparent",
               )}
             >
               {item.label}
@@ -134,19 +138,21 @@ export function MixesPage() {
           ))}
         </div>
 
-        <ChartsFilters filters={filters} onChange={setFilters} />
+        <div className="mixes-page__filters">
+          <ChartsFilters filters={filters} onChange={setFilters} />
+        </div>
 
         {isLoading && <MixWaspLoader label="Loading mixes" />}
 
         {error && (
-          <p className="text-destructive text-sm">
-            Something went wrong loading mixes.
+          <p className="text-destructive text-sm tracking-wide">
+            [ERR] Something went wrong loading mixes.
           </p>
         )}
 
         {showEmpty && (
-          <div className="border-border rounded-md border border-dashed px-6 py-12 text-center">
-            <p className="font-medium">
+          <div className="border-primary/30 bg-card/40 rounded-sm border border-dashed px-6 py-12 text-center">
+            <p className="font-display text-primary text-sm tracking-[0.15em]">
               {hasActiveFilters
                 ? "No mixes match these filters"
                 : "No mixes in this period yet"}
@@ -206,10 +212,10 @@ export function MixesPage() {
         )}
 
         {!user && (
-          <p className="text-muted-foreground mt-6 text-center text-sm">
+          <p className="text-muted-foreground mt-6 text-center text-sm tracking-wide">
             <WaspRouterLink
               to={routes.LoginRoute.to}
-              className="text-foreground underline-offset-4 hover:underline"
+              className="text-primary underline-offset-4 hover:underline"
             >
               Log in
             </WaspRouterLink>{" "}

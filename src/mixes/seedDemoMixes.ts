@@ -13,82 +13,67 @@ type DemoMixSeed = {
 
 const DEMO_MIXES: DemoMixSeed[] = [
   {
-    title: "Warehouse Soft Open",
-    artist: { name: "Nora Vale" },
-    link: "https://soundcloud.com/",
-    promoter: "North Dock",
-    description: "Rolling house for a slow-build Friday.",
+    title:
+      "Radio 1's Essential Mix with Barry Can't Swim at The Warehouse Project",
+    artist: { name: "Barry Can't Swim" },
+    link: "https://www.youtube.com/watch?v=F2Pw1lWWtl8",
+    promoter: "Radio 1",
+    genres: [{ name: "House" }, { name: "Disco" }],
+    tags: [{ name: "live" }],
+  },
+  {
+    title: "Barry Can't Swim b2b salute - Live at Lost Sundays (Sydney) 2024",
+    artist: { name: "Barry Can't Swim" },
+    link: "https://www.youtube.com/watch?v=A_MHvl6_7-Y",
+    promoter: "Lost Sundays",
     genres: [{ name: "House" }],
-    tags: [{ name: "Warmup" }, { name: "Live" }],
+    tags: [],
   },
   {
-    title: "Chrome Stairs",
-    artist: { name: "Kite Frequency" },
-    link: "https://soundcloud.com/",
-    promoter: "Circuit Room",
-    description: "Tight techno with a late-night edge.",
-    genres: [{ name: "Techno" }],
-    tags: [{ name: "Peak Time" }],
-  },
-  {
-    title: "Salt Air Transmission",
-    artist: { name: "Mira Solis" },
-    link: "https://soundcloud.com/",
-    description: "Coastal disco edits into deep house.",
-    genres: [{ name: "Disco" }, { name: "House" }],
-    tags: [{ name: "Radio" }, { name: "Warmup" }],
-  },
-  {
-    title: "Low Pressure System",
-    artist: { name: "Juniper Bass" },
-    link: "https://soundcloud.com/",
-    promoter: "Basin",
-    description: "Half-time drum & bass with heavy subs.",
-    genres: [{ name: "Drum & Bass" }],
-    tags: [{ name: "Peak Time" }, { name: "Live" }],
-  },
-  {
-    title: "Afterglow Corridor",
-    artist: { name: "Echo Marlowe" },
-    link: "https://soundcloud.com/",
-    description: "Ambient drift for the walk home.",
-    genres: [{ name: "Ambient" }],
-    tags: [{ name: "Sunrise" }],
-  },
-  {
-    title: "Second Wind",
-    artist: { name: "Riven Coast" },
-    link: "https://soundcloud.com/",
-    promoter: "Harbor Line",
-    description: "Peak-time house with a live vocal cut.",
-    genres: [{ name: "House" }],
-    tags: [{ name: "Peak Time" }, { name: "Live" }],
-  },
-  {
-    title: "Night Bus Sketch",
-    artist: { name: "Nora Vale" },
-    link: "https://soundcloud.com/",
-    description: "Unreleased techno tools and closed loops.",
-    genres: [{ name: "Techno" }],
-    tags: [{ name: "Radio" }],
-  },
-  {
-    title: "Green Room Heat",
-    artist: { name: "Kite Frequency" },
-    link: "https://soundcloud.com/",
-    promoter: "Circuit Room",
-    description: "Drum & bass warm-up before the headliner.",
-    genres: [{ name: "Drum & Bass" }],
-    tags: [{ name: "Warmup" }],
-  },
-  {
-    title: "Paradise City 2026",
+    title:
+      "Interplanetary Criminal at Paradise City 2026: Forest Stage Closing Set",
     artist: { name: "Interplanetary Criminal" },
     link: "https://www.youtube.com/watch?v=rseeyi0pFq8",
-    promoter: "Paradise City Festival",
-    description: "UK garage and breakbeat energy from Paradise City 2026.",
-    genres: [{ name: "House" }, { name: "Disco" }],
-    tags: [{ name: "Live" }, { name: "Peak Time" }],
+    promoter: "Paradise City 2026",
+    genres: [{ name: "House" }],
+    tags: [],
+  },
+  {
+    title: "Chris Stussy @ Paradise City, Brussels 2025",
+    artist: { name: "Chris Stussy" },
+    link: "https://www.youtube.com/watch?v=-iiaxD8QngA",
+    genres: [{ name: "House" }],
+    tags: [{ name: "live" }],
+  },
+  {
+    title: "Interplanetary Criminal | EDC Las Vegas 2026",
+    artist: { name: "Interplanetary Criminal" },
+    link: "https://www.youtube.com/watch?v=V6EXDSElxtM",
+    genres: [{ name: "House" }],
+    tags: [{ name: "live" }],
+  },
+  {
+    title: "Silva Bumpa | R360 Live From Addict, Prague",
+    artist: { name: "Silva Bumpa" },
+    link: "https://www.youtube.com/watch?v=5AnQX_9Ce1U",
+    genres: [{ name: "House" }],
+    tags: [{ name: "live" }],
+  },
+  {
+    title: "Flava D | Boiler Room: Sheffield",
+    artist: { name: "Flava D" },
+    link: "https://www.youtube.com/watch?v=KmRqOaS_6FI",
+    promoter: "Boiler Room",
+    genres: [{ name: "Dubstep" }, { name: "Bass" }, { name: "Garage" }],
+    tags: [{ name: "live" }],
+  },
+  {
+    title: "southstar | Boiler Room: Belfast",
+    artist: { name: "southstar" },
+    link: "https://www.youtube.com/watch?v=GoEYxQadWfY",
+    promoter: "Boiler Room",
+    genres: [{ name: "House" }, { name: "Techno" }],
+    tags: [{ name: "live" }],
   },
 ];
 
@@ -157,12 +142,18 @@ export async function ensureDemoMixesSeeded(
           artist: {
             connect: { name: seed.artist.name },
           },
-          genres: {
-            connect: seed.genres.map((genre) => ({ name: genre.name })),
-          },
-          tags: {
-            connect: seed.tags.map((tag) => ({ name: tag.name })),
-          },
+          genres:
+            seed.genres.length > 0
+              ? {
+                  connect: seed.genres.map((genre) => ({ name: genre.name })),
+                }
+              : undefined,
+          tags:
+            seed.tags.length > 0
+              ? {
+                  connect: seed.tags.map((tag) => ({ name: tag.name })),
+                }
+              : undefined,
         },
       });
     }),
@@ -202,11 +193,10 @@ export async function ensureDemoMixesSeeded(
     { mixIndex: 5, voterIndex: 5, at: daysAgo(14) },
     { mixIndex: 5, voterIndex: 7, at: daysAgo(15) },
     { mixIndex: 6, voterIndex: 6, at: daysAgo(18) },
+    { mixIndex: 6, voterIndex: 0, at: hoursAgo(6) },
     { mixIndex: 7, voterIndex: 7, at: daysAgo(20) },
-    { mixIndex: 7, voterIndex: 0, at: daysAgo(22) },
-    { mixIndex: 8, voterIndex: 1, at: hoursAgo(4) },
-    { mixIndex: 8, voterIndex: 3, at: hoursAgo(6) },
-    { mixIndex: 8, voterIndex: 5, at: daysAgo(1) },
+    { mixIndex: 7, voterIndex: 0, at: daysAgo(1) },
+    { mixIndex: 7, voterIndex: 3, at: hoursAgo(4) },
   ];
 
   for (const favourite of favouritePlan) {

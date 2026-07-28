@@ -116,11 +116,14 @@ export function SubmitMixPage() {
         </WaspRouterLink>
 
         <header className="mb-8">
-          <h1 className="text-3xl font-semibold tracking-tight sm:text-4xl">
+          <p className="text-primary/70 mb-1 text-[11px] tracking-[0.25em] uppercase">
+            // uplink
+          </p>
+          <h1 className="text-phosphor text-3xl font-bold tracking-[0.12em] sm:text-4xl">
             Submit a mix
           </h1>
           <p className="text-muted-foreground mt-2 text-base leading-relaxed">
-            Paste a link first - we&apos;ll preview it and pull the title when
+            Paste a link first — we&apos;ll preview it and pull the title when
             we can. Artist, genre, and tag names are matched to existing ones
             when possible.
           </p>

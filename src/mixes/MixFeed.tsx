@@ -11,7 +11,7 @@ export function MixFeed({
   return (
     <div
       className={cn(
-        "border-border divide-border overflow-hidden rounded-md border divide-y",
+        "mix-feed border-border divide-border overflow-hidden rounded-sm border divide-y",
         className,
       )}
     >

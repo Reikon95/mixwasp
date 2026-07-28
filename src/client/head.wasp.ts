@@ -2,6 +2,9 @@ import { type App } from "@wasp.sh/spec";
 
 export const head: App["head"] = [
   "<link rel='icon' href='/favicon.ico' />",
+  "<link rel='preconnect' href='https://fonts.googleapis.com' />",
+  "<link rel='preconnect' href='https://fonts.gstatic.com' crossOrigin='anonymous' />",
+  "<link href='https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700;800&family=Share+Tech+Mono&display=swap' rel='stylesheet' />",
 
   "<meta name='description' content='Discover, favourite, and share the best DJ mixes with MixWasp.' />",
   "<meta name='author' content='MixWasp' />",

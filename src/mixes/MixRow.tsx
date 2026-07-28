@@ -38,11 +38,11 @@ export function MixRow({
   const embed = getMixEmbed(mix.link);
 
   return (
-    <li className="mixes-page__row group flex gap-2 bg-card px-2 py-3 transition-colors sm:gap-3 sm:px-4 sm:py-4">
+    <li className="mixes-page__row group flex gap-2 px-2 py-3 sm:gap-3 sm:px-4 sm:py-4">
       <div className="flex w-9 shrink-0 flex-col items-center gap-0.5 pt-0.5 sm:w-10">
         {rank !== undefined && (
-          <span className="text-muted-foreground text-[10px] font-semibold tabular-nums sm:text-xs">
-            #{rank}
+          <span className="text-primary/70 text-[10px] font-semibold tracking-wider tabular-nums sm:text-xs">
+            {String(rank).padStart(2, "0")}
           </span>
         )}
         <button
@@ -57,16 +57,16 @@ export function MixRow({
               : `Favourite ${mix.title}`
           }
           className={cn(
-            "hover:bg-muted flex flex-col items-center rounded-md p-1 transition-colors sm:p-1.5",
-            mix.hasFavourited && "text-destructive",
-            !mix.hasFavourited && "text-muted-foreground hover:text-destructive",
+            "hover:bg-primary/10 flex flex-col items-center rounded-sm p-1 transition-colors sm:p-1.5",
+            mix.hasFavourited && "text-secondary",
+            !mix.hasFavourited && "text-muted-foreground hover:text-secondary",
             isToggling && "opacity-60",
           )}
         >
           <Heart
             className={cn(
               "size-5 sm:size-[22px]",
-              mix.hasFavourited && "fill-current",
+              mix.hasFavourited && "fill-current drop-shadow-[0_0_8px_hsl(var(--neon)/0.7)]",
             )}
             aria-hidden
           />
@@ -77,7 +77,7 @@ export function MixRow({
       </div>
 
       <div className="min-w-0 flex-1">
-        <h2 className="text-sm leading-snug font-semibold sm:text-base">
+        <h2 className="text-foreground group-hover:text-primary text-sm leading-snug font-semibold tracking-wide transition-colors sm:text-base">
           {mix.title}
         </h2>
 
@@ -88,7 +88,7 @@ export function MixRow({
               <WaspRouterLink
                 to={routes.ArtistMixesRoute.to}
                 params={{ artistId: mix.artist.id }}
-                className="text-foreground hover:underline"
+                className="text-accent hover:text-primary transition-colors"
               >
                 {mix.artist.name}
               </WaspRouterLink>
@@ -106,7 +106,7 @@ export function MixRow({
               <WaspRouterLink
                 to={routes.GenreMixesRoute.to}
                 params={{ genreId: genre.id }}
-                className="bg-muted text-muted-foreground hover:text-foreground rounded-full px-2 py-0.5 text-[11px] font-medium transition-colors"
+                className="border-primary/25 bg-primary/5 text-primary hover:border-primary/50 hover:bg-primary/10 rounded-sm border px-2 py-0.5 text-[11px] font-medium tracking-wide transition-colors"
               >
                 {genre.name}
               </WaspRouterLink>
@@ -118,7 +118,7 @@ export function MixRow({
               <WaspRouterLink
                 to={routes.TagMixesRoute.to}
                 params={{ tagId: tag.id }}
-                className="hover:text-foreground underline-offset-2 hover:underline"
+                className="text-secondary/80 hover:text-secondary underline-offset-2 hover:underline"
               >
                 #{tag.name}
               </WaspRouterLink>
@@ -145,7 +145,7 @@ export function MixRow({
             href={mix.link}
             target="_blank"
             rel="noreferrer"
-            className="text-muted-foreground hover:bg-muted inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-medium transition-colors hover:text-foreground"
+            className="text-muted-foreground hover:border-primary/40 hover:text-primary inline-flex items-center gap-1 rounded-sm border border-transparent px-2.5 py-1 text-xs font-medium tracking-wide uppercase transition-colors"
           >
             <ExternalLink className="size-3.5" aria-hidden />
             Open mix
@@ -154,7 +154,7 @@ export function MixRow({
             <WaspRouterLink
               to={routes.ArtistMixesRoute.to}
               params={{ artistId: mix.artist.id }}
-              className="text-muted-foreground hover:bg-muted inline-flex items-center rounded-full px-2.5 py-1 text-xs font-medium transition-colors hover:text-foreground"
+              className="text-muted-foreground hover:border-primary/40 hover:text-primary inline-flex items-center rounded-sm border border-transparent px-2.5 py-1 text-xs font-medium tracking-wide uppercase transition-colors"
             >
               More by {mix.artist.name}
             </WaspRouterLink>
