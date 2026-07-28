@@ -45,7 +45,6 @@ export default app({
   },
   emailSender,
   spec: [
-    // Mixes rankings live at `/` via mixesSpec - product first.
     mixesSpec,
     authSpec,
     userSpec,

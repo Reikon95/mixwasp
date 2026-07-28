@@ -1,4 +1,4 @@
-import type { Artist, PrismaClient } from "@prisma/client";
+import type { PrismaClient } from "@prisma/client";
 
 /** Seed shape aligned with Mix + Artist + Genre[] + Tag[] in schema.prisma */
 type DemoMixSeed = {
@@ -6,7 +6,7 @@ type DemoMixSeed = {
   link: string;
   promoter?: string;
   description?: string;
-  artist: Pick<Artist, "name">;
+  artist: { name: string };
   genres: { name: string }[];
   tags: { name: string }[];
 };
@@ -100,30 +100,10 @@ function daysAgo(days: number): Date {
   return new Date(Date.now() - days * 24 * 60 * 60 * 1000);
 }
 
-async function ensureArtist(
-  prisma: PrismaClient,
-  cache: Map<string, Artist>,
-  name: string,
-): Promise<Artist> {
-  const cacheKey = name.toLowerCase();
-  const cached = cache.get(cacheKey);
-  if (cached) {
-    return cached;
-  }
-
-  const existing = await prisma.artist.findFirst({
-    where: { name: { equals: name, mode: "insensitive" } },
-  });
-  const artist =
-    existing ?? (await prisma.artist.create({ data: { name } }));
-  cache.set(cacheKey, artist);
-  return artist;
-}
-
 /**
  * Seeds demo mixes (and staggered favourites) when the Mix table is empty.
- * Genre and Tag names are @unique - upserted once up front, then mixes connect
- * by name. Safe to call repeatedly - no-ops once mixes exist.
+ * Artist, Genre, and Tag names are @unique — upserted once up front, then mixes
+ * connect by name. Safe to call repeatedly - no-ops once mixes exist.
  */
 export async function ensureDemoMixesSeeded(
   prisma: PrismaClient,
@@ -133,7 +113,10 @@ export async function ensureDemoMixesSeeded(
     return { seeded: false, mixCount: existingCount };
   }
 
-  // Upsert unique genres/tags first so parallel mix creates can't race on name.
+  // Upsert unique artists/genres/tags first so parallel mix creates can't race.
+  const artistNames = [
+    ...new Set(DEMO_MIXES.map((mix) => mix.artist.name)),
+  ];
   const genreNames = [
     ...new Set(DEMO_MIXES.flatMap((mix) => mix.genres.map((g) => g.name))),
   ];
@@ -141,6 +124,13 @@ export async function ensureDemoMixesSeeded(
     ...new Set(DEMO_MIXES.flatMap((mix) => mix.tags.map((t) => t.name))),
   ];
 
+  for (const name of artistNames) {
+    await prisma.artist.upsert({
+      where: { name },
+      update: {},
+      create: { name },
+    });
+  }
   for (const name of genreNames) {
     await prisma.genre.upsert({
       where: { name },
@@ -156,28 +146,17 @@ export async function ensureDemoMixesSeeded(
     });
   }
 
-  const artistCache = new Map<string, Artist>();
-  const artistNames = [
-    ...new Set(DEMO_MIXES.map((mix) => mix.artist.name)),
-  ];
-  for (const name of artistNames) {
-    await ensureArtist(prisma, artistCache, name);
-  }
-
   const mixes = await Promise.all(
     DEMO_MIXES.map(async (seed) => {
-      const artist = artistCache.get(seed.artist.name.toLowerCase());
-      if (!artist) {
-        throw new Error(`Missing seeded artist: ${seed.artist.name}`);
-      }
-
       return prisma.mix.create({
         data: {
           title: seed.title,
           link: seed.link,
           promoter: seed.promoter,
           description: seed.description,
-          artistId: artist.id,
+          artist: {
+            connect: { name: seed.artist.name },
+          },
           genres: {
             connect: seed.genres.map((genre) => ({ name: genre.name })),
           },

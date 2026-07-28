@@ -55,7 +55,11 @@ async function findOrCreateArtistByName(name: string): Promise<Artist> {
   if (existing) {
     return existing;
   }
-  return prisma.artist.create({ data: { name } });
+  return prisma.artist.upsert({
+    where: { name },
+    update: {},
+    create: { name },
+  });
 }
 
 async function findOrCreateGenresByName(names: string[]): Promise<Genre[]> {
@@ -126,6 +130,7 @@ export const createMix: CreateMix<CreateMixInput, CreatedMix> = async (
       link: args.link,
       promoter: args.promoter || null,
       description: args.description || null,
+      favouriteCount: 1,
       artist: { connect: { id: artist.id } },
       genres: genres.length
         ? { connect: genres.map((genre) => ({ id: genre.id })) }
@@ -133,6 +138,11 @@ export const createMix: CreateMix<CreateMixInput, CreatedMix> = async (
       tags: tags.length
         ? { connect: tags.map((tag) => ({ id: tag.id })) }
         : undefined,
+      favourites: {
+        create: {
+          user: { connect: { id: context.user.id } },
+        },
+      },
     },
     include: mixInclude,
   });
@@ -326,54 +336,91 @@ export const getPopularMixes: GetPopularMixes<
     take: hasFilters ? Math.min(limit * 5, 250) : limit,
   });
 
-  if (grouped.length === 0) {
-    return [];
-  }
-
   const countByMixId = new Map(
     grouped.map((row) => [row.mixId, row._count.mixId]),
   );
   const mixIds = grouped.map((row) => row.mixId);
 
-  const mixes = await context.entities.Mix.findMany({
+  const mixQueryInclude = {
+    ...mixInclude,
+    ...(userId
+      ? {
+          favourites: {
+            where: { userId },
+            select: { id: true },
+            take: 1,
+          },
+        }
+      : {}),
+  };
+
+  const mapMixToPopular = (
+    mix: Mix & {
+      artist: Artist;
+      genres: Genre[];
+      tags: Tag[];
+      favourites?: { id: string }[];
+    },
+    periodFavouriteCount: number,
+  ): PopularMix => {
+    const { favourites, ...rest } = mix;
+    return {
+      ...rest,
+      periodFavouriteCount,
+      hasFavourited: (favourites?.length ?? 0) > 0,
+    };
+  };
+
+  let ranked: PopularMix[] = [];
+
+  if (mixIds.length > 0) {
+    const mixes = await context.entities.Mix.findMany({
+      where: {
+        id: { in: mixIds },
+        ...filters,
+      },
+      include: mixQueryInclude,
+    });
+
+    const mixById = new Map(mixes.map((mix) => [mix.id, mix]));
+
+    ranked = mixIds.flatMap((mixId) => {
+      const mix = mixById.get(mixId);
+      if (!mix) {
+        return [];
+      }
+
+      return [
+        mapMixToPopular(mix, countByMixId.get(mixId) ?? 0),
+      ];
+    }).slice(0, limit);
+  }
+
+  if (ranked.length >= limit) {
+    return ranked;
+  }
+
+  // Append mixes with no favourites in this period, newest first.
+  const rankedIds = ranked.map((mix) => mix.id);
+  const zeroPeriodMixes = await context.entities.Mix.findMany({
     where: {
-      id: { in: mixIds },
-      ...filters,
+      ...(hasFilters ? filters : {}),
+      ...(rankedIds.length > 0 ? { id: { notIn: rankedIds } } : {}),
+      favourites: {
+        none: {
+          createdAt: { gte: since! },
+        },
+      },
     },
-    include: {
-      ...mixInclude,
-      ...(userId
-        ? {
-            favourites: {
-              where: { userId },
-              select: { id: true },
-              take: 1,
-            },
-          }
-        : {}),
-    },
+    include: mixQueryInclude,
+    orderBy: { createdAt: "desc" },
+    take: limit - ranked.length,
   });
 
-  const mixById = new Map(mixes.map((mix) => [mix.id, mix]));
-
-  return mixIds.flatMap((mixId) => {
-    const mix = mixById.get(mixId);
-    if (!mix) {
-      return [];
-    }
-
-    const { favourites, ...rest } = mix as typeof mix & {
-      favourites?: { id: string }[];
-    };
-
-    return [
-      {
-        ...rest,
-        periodFavouriteCount: countByMixId.get(mixId) ?? 0,
-        hasFavourited: (favourites?.length ?? 0) > 0,
-      },
-    ];
-  }).slice(0, limit);
+  return [
+    ...ranked,
+    ...zeroPeriodMixes.map((mix) => mapMixToPopular(mix, 0)),
+  ];
 };
 
 const getArtistMixesInputSchema = z.object({
