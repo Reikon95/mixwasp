@@ -83,31 +83,31 @@ export function MixesPage() {
         <header className="mixes-page__intro mb-6 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
           <div>
             <p className="text-primary/70 mb-1 text-[11px] tracking-[0.25em] uppercase">
-              // signal_rank
+              // mixwasp
             </p>
             <h1 className="text-phosphor terminal-cursor text-2xl font-bold tracking-[0.12em] sm:text-3xl">
               Charts
             </h1>
-            <p className="text-muted-foreground mt-2 max-w-md text-sm leading-relaxed">
-              Top mixes by favourites — jack in and heart the sets you keep
-              looping.
-            </p>
           </div>
           {user ? (
-            <Button asChild size="sm" className="shrink-0 self-start sm:self-auto">
+            <Button
+              asChild
+              size="lg"
+              className="shrink-0 self-stretch shadow-[0_0_28px_hsl(var(--glow)/0.55)] sm:self-auto"
+            >
               <WaspRouterLink to={routes.SubmitMixRoute.to}>
-                <Plus className="size-4" aria-hidden />
+                <Plus className="size-5" aria-hidden />
                 Submit mix
               </WaspRouterLink>
             </Button>
           ) : (
             <Button
               asChild
-              variant="outline"
-              size="sm"
-              className="shrink-0 self-start sm:self-auto"
+              size="lg"
+              className="shrink-0 self-stretch shadow-[0_0_28px_hsl(var(--glow)/0.55)] sm:self-auto"
             >
               <WaspRouterLink to={routes.LoginRoute.to}>
+                <Plus className="size-5" aria-hidden />
                 Log in to submit
               </WaspRouterLink>
             </Button>

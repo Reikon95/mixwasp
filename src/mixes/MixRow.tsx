@@ -39,12 +39,23 @@ export function MixRow({
 
   return (
     <li className="mixes-page__row group flex gap-2 px-2 py-3 sm:gap-3 sm:px-4 sm:py-4">
-      <div className="flex w-9 shrink-0 flex-col items-center gap-0.5 pt-0.5 sm:w-10">
-        {rank !== undefined && (
-          <span className="text-primary/70 text-[10px] font-semibold tracking-wider tabular-nums sm:text-xs">
+      {rank !== undefined && (
+        <div className="flex w-11 shrink-0 flex-col items-center justify-start pt-0.5 sm:w-14">
+          <span
+            className={cn(
+              "font-display text-primary leading-none font-bold tabular-nums tracking-wider",
+              rank <= 3
+                ? "text-phosphor text-xl sm:text-2xl"
+                : "text-lg opacity-90 sm:text-xl",
+            )}
+            aria-label={`Rank ${rank}`}
+          >
             {String(rank).padStart(2, "0")}
           </span>
-        )}
+        </div>
+      )}
+
+      <div className="flex w-9 shrink-0 flex-col items-center gap-0.5 pt-0.5 sm:w-10">
         <button
           type="button"
           onClick={onToggle}
@@ -66,7 +77,8 @@ export function MixRow({
           <Heart
             className={cn(
               "size-5 sm:size-[22px]",
-              mix.hasFavourited && "fill-current drop-shadow-[0_0_8px_hsl(var(--neon)/0.7)]",
+              mix.hasFavourited &&
+                "fill-current drop-shadow-[0_0_8px_hsl(var(--neon)/0.7)]",
             )}
             aria-hidden
           />

@@ -112,14 +112,12 @@
   --shadow-5: 0px 1px 1px rgba(0, 0, 0, 0.15);
   --shadow-6: 0px 3px 15px rgba(0, 0, 0, 0.1);
   --shadow-7: -5px 0 0 #313d4a, 5px 0 0 #313d4a;
-  --shadow-8:
-    1px 0 0 #313d4a, -1px 0 0 #313d4a, 0 1px 0 #313d4a, 0 -1px 0 #313d4a,
-    0 3px 13px rgb(0 0 0 / 8%);
+  --shadow-8: 1px 0 0 #313d4a, -1px 0 0 #313d4a, 0 1px 0 #313d4a,
+    0 -1px 0 #313d4a, 0 3px 13px rgb(0 0 0 / 8%);
   --shadow-default: 0px 8px 13px -3px rgba(0, 0, 0, 0.07);
   --shadow-card: 0px 1px 3px rgba(0, 0, 0, 0.12);
   --shadow-card-2: 0px 1px 2px rgba(0, 0, 0, 0.05);
-  --shadow-switcher:
-    0px 2px 4px rgba(0, 0, 0, 0.2), inset 0px 2px 2px #ffffff,
+  --shadow-switcher: 0px 2px 4px rgba(0, 0, 0, 0.2), inset 0px 2px 2px #ffffff,
     inset 0px -1px 1px rgba(0, 0, 0, 0.1);
   --shadow-switch-1: 0px 0px 5px rgba(0, 0, 0, 0.15);
 
@@ -213,7 +211,7 @@
 
 @layer base {
   :root {
-    /* Pale CRT terminal — phosphor green on mint glass */
+    /* Pale CRT terminal - phosphor green on mint glass */
     --background: 160 30% 94%;
     --foreground: 160 80% 12%;
     --card: 160 25% 97%;
@@ -314,13 +312,12 @@
   }
 }
 
-/* Atmosphere — CRT grid + scanlines + phosphor bloom */
+/* Atmosphere - CRT grid + scanlines + phosphor bloom */
 .app-shell {
   position: relative;
   isolation: isolate;
   min-height: 100vh;
-  background:
-    radial-gradient(
+  background: radial-gradient(
       ellipse 90% 60% at 50% -10%,
       hsl(var(--neon) / 0.12),
       transparent 55%
@@ -344,8 +341,10 @@
   position: fixed;
   inset: 0;
   z-index: 0;
-  background-image:
-    linear-gradient(hsl(var(--primary) / 0.04) 1px, transparent 1px),
+  background-image: linear-gradient(
+      hsl(var(--primary) / 0.04) 1px,
+      transparent 1px
+    ),
     linear-gradient(90deg, hsl(var(--primary) / 0.04) 1px, transparent 1px);
   background-size: 48px 48px;
   mask-image: radial-gradient(ellipse at center, black 30%, transparent 80%);
@@ -520,6 +519,21 @@
   text-transform: uppercase;
   color: hsl(var(--primary));
   text-shadow: 0 0 12px hsl(var(--glow) / 0.45);
+}
+
+.submit-vinyl {
+  background: conic-gradient(
+    from 0deg,
+    hsl(var(--primary) / 0.15),
+    hsl(var(--neon) / 0.35),
+    hsl(var(--accent) / 0.25),
+    hsl(var(--primary) / 0.15)
+  );
+  box-shadow: 0 0 0 1px hsl(var(--primary) / 0.25);
+}
+
+.submit-vinyl--live {
+  animation: phosphor-pulse 1.8s ease-in-out infinite;
 }
 
 /* third-party libraries CSS */

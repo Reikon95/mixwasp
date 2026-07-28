@@ -8,7 +8,7 @@ import {
 } from "../../payment/plans";
 import { ensureDemoMixesSeeded } from "../../mixes/seedDemoMixes";
 
-type MockUserData = Omit<User, "id">;
+type MockUserData = Omit<User, "id" | "mixFavourites" | "clubs">;
 
 /**
  * This function, which we've imported in `app.db.seeds` in the `main.wasp` file,

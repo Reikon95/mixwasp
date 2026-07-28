@@ -108,10 +108,11 @@ export function TagMixesPage() {
             ) : (
               <MixFeed>
                 <ol>
-                  {data.mixes.map((mix) => (
+                  {data.mixes.map((mix, index) => (
                     <MixRow
                       key={mix.id}
                       mix={mix}
+                      rank={index + 1}
                       favouriteCount={mix.favouriteCount}
                       isLoggedIn={!!user}
                       isToggling={togglingMixId === mix.id}

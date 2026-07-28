@@ -9,9 +9,12 @@ export function SignupPage() {
   return (
     <AuthPageLayout>
       <SignupFormWithGooglePrimary />
-      <p className="mt-6 text-center text-sm font-medium text-gray-700">
+      <p className="text-muted-foreground mt-6 text-center text-sm font-medium">
         Already have an account?{" "}
-        <WaspRouterLink to={routes.LoginRoute.to} className="underline">
+        <WaspRouterLink
+          to={routes.LoginRoute.to}
+          className="text-primary underline underline-offset-4 hover:text-primary/80"
+        >
           Log in
         </WaspRouterLink>
       </p>

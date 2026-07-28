@@ -36,7 +36,7 @@ export function GoogleContinueButton({
   return (
     <a
       href={googleSignInUrl}
-      className="border-border bg-background text-foreground hover:bg-muted flex w-full items-center justify-center gap-3 rounded-md border px-4 py-3 text-sm font-semibold shadow-sm transition-colors"
+      className="flex w-full items-center justify-center gap-3 rounded-sm border border-white/20 bg-white px-4 py-3 text-sm font-semibold text-zinc-900 shadow-[0_0_20px_hsl(var(--glow)/0.2)] transition-colors hover:bg-zinc-100"
     >
       <GoogleIcon className="size-5 shrink-0" />
       {label}
@@ -54,8 +54,8 @@ export function AuthMethodDivider({
       <div className="absolute inset-0 flex items-center" aria-hidden>
         <div className="border-border w-full border-t" />
       </div>
-      <div className="relative flex justify-center text-xs uppercase tracking-wide">
-        <span className="bg-white px-2 text-gray-500">{label}</span>
+      <div className="relative flex justify-center text-xs tracking-wide uppercase">
+        <span className="bg-card text-muted-foreground px-2">{label}</span>
       </div>
     </div>
   );

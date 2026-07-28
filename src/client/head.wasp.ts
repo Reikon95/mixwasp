@@ -18,7 +18,7 @@ export const head: App["head"] = [
   "<meta property='og:image' content='https://mixwasp.com/output.png' />",
   "<meta property='og:image:width' content='1024' />",
   "<meta property='og:image:height' content='1024' />",
-  "<meta property='og:image:alt' content='MixWasp — DJ bee mascot' />",
+  "<meta property='og:image:alt' content='MixWasp - DJ bee mascot' />",
   "<meta name='twitter:image' content='https://mixwasp.com/output.png' />",
   "<meta name='twitter:image:width' content='1024' />",
   "<meta name='twitter:image:height' content='1024' />",

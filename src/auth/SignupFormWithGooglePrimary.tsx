@@ -41,10 +41,10 @@ export function SignupFormWithGooglePrimary() {
     <div>
       <div className="mb-6 flex flex-col items-center text-center">
         <img src={logo} alt="MixWasp" className="mb-3 size-12" />
-        <h2 className="text-xl font-semibold tracking-tight text-gray-900">
+        <h2 className="text-foreground text-xl font-semibold tracking-tight">
           Create your MixWasp account
         </h2>
-        <p className="mt-1 text-sm text-gray-600">
+        <p className="text-muted-foreground mt-1 text-sm">
           Sign up with Google in one click.
         </p>
       </div>
@@ -65,7 +65,7 @@ export function SignupFormWithGooglePrimary() {
           </p>
         )}
         <div className="space-y-2">
-          <Label htmlFor="signup-email" className="text-gray-900">
+          <Label htmlFor="signup-email">
             Email
           </Label>
           <Input
@@ -76,11 +76,10 @@ export function SignupFormWithGooglePrimary() {
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             disabled={isLoading}
-            className="bg-white text-gray-900"
           />
         </div>
         <div className="space-y-2">
-          <Label htmlFor="signup-password" className="text-gray-900">
+          <Label htmlFor="signup-password">
             Password
           </Label>
           <Input
@@ -91,7 +90,6 @@ export function SignupFormWithGooglePrimary() {
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             disabled={isLoading}
-            className="bg-white text-gray-900"
           />
         </div>
         <Button type="submit" className="w-full" disabled={isLoading}>

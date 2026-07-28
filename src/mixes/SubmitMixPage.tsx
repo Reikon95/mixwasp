@@ -20,6 +20,8 @@ import { Input } from "../client/components/ui/input";
 import { Textarea } from "../client/components/ui/textarea";
 import { useDebounce } from "../client/hooks/useDebounce";
 import { toast } from "../client/hooks/use-toast";
+import { cn } from "../client/utils";
+import logo from "../client/static/mixwaspnobg.png";
 import { MixEmbedPreview } from "./MixEmbedPreview";
 import { ArtistCombobox } from "./ArtistCombobox";
 import { GenreCombobox, TagCombobox } from "./NameMultiCombobox";
@@ -103,30 +105,51 @@ export function SubmitMixPage() {
   };
 
   const previewTitle = preview?.title ?? form.watch("title") ?? "Mix preview";
+  const vinylSpinning = isSubmitting || isPreviewLoading;
 
   return (
     <main className="px-4 py-10 sm:px-6 lg:px-8">
       <div className="mx-auto max-w-xl">
         <WaspRouterLink
           to={routes.MixesRoute.to}
-          className="text-muted-foreground hover:text-foreground mb-6 inline-flex items-center gap-1.5 text-sm transition-colors"
+          className="text-muted-foreground hover:text-primary mb-6 inline-flex items-center gap-1.5 text-sm tracking-wide uppercase transition-colors"
         >
           <ArrowLeft className="size-4" aria-hidden />
           Back to charts
         </WaspRouterLink>
 
-        <header className="mb-8">
-          <p className="text-primary/70 mb-1 text-[11px] tracking-[0.25em] uppercase">
-            // uplink
-          </p>
-          <h1 className="text-phosphor text-3xl font-bold tracking-[0.12em] sm:text-4xl">
-            Submit a mix
-          </h1>
-          <p className="text-muted-foreground mt-2 text-base leading-relaxed">
-            Paste a link first — we&apos;ll preview it and pull the title when
-            we can. Artist, genre, and tag names are matched to existing ones
-            when possible.
-          </p>
+        <header className="mb-8 flex items-center gap-4 sm:gap-5">
+          <div
+            className={cn(
+              "submit-vinyl relative shrink-0 rounded-full p-[3px]",
+              vinylSpinning && "submit-vinyl--live",
+            )}
+            aria-hidden
+          >
+            <div className="border-primary/35 bg-card/60 relative overflow-hidden rounded-full border shadow-[0_0_28px_hsl(var(--glow)/0.35)]">
+              <img
+                src={logo}
+                alt=""
+                className={cn(
+                  "size-16 rounded-full sm:size-[4.5rem]",
+                  vinylSpinning
+                    ? "animate-[spin_2.4s_linear_infinite]"
+                    : "animate-[spin_18s_linear_infinite]",
+                )}
+              />
+              <span className="bg-background/90 border-primary/50 absolute top-1/2 left-1/2 size-2.5 -translate-x-1/2 -translate-y-1/2 rounded-full border sm:size-3" />
+            </div>
+          </div>
+
+          <div className="min-w-0">
+            <p className="text-primary/70 mb-1 text-[11px] tracking-[0.25em] uppercase">
+              // uplink
+            </p>
+            <h1 className="text-phosphor text-3xl font-bold tracking-[0.12em] sm:text-5xl">
+              Submit a mix
+            </h1>
+
+          </div>
         </header>
 
         <Form {...form}>

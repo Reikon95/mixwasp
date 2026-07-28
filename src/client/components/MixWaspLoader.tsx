@@ -22,7 +22,7 @@ export function MixWaspLoader({
         src={logo}
         alt=""
         aria-hidden
-        className="size-16 animate-bounce drop-shadow-[0_0_18px_hsl(var(--glow)/0.55)] sm:size-20"
+        className="size-16 animate-[spin_2.4s_linear_infinite] rounded-full drop-shadow-[0_0_18px_hsl(var(--glow)/0.55)] sm:size-20"
       />
       <p className="text-primary text-xs tracking-[0.3em] uppercase">
         {label}

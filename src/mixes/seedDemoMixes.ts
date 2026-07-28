@@ -87,7 +87,7 @@ function daysAgo(days: number): Date {
 
 /**
  * Seeds demo mixes (and staggered favourites) when the Mix table is empty.
- * Artist, Genre, and Tag names are @unique — upserted once up front, then mixes
+ * Artist, Genre, and Tag names are @unique - upserted once up front, then mixes
  * connect by name. Safe to call repeatedly - no-ops once mixes exist.
  */
 export async function ensureDemoMixesSeeded(
@@ -145,14 +145,14 @@ export async function ensureDemoMixesSeeded(
           genres:
             seed.genres.length > 0
               ? {
-                  connect: seed.genres.map((genre) => ({ name: genre.name })),
-                }
+                connect: seed.genres.map((genre) => ({ name: genre.name })),
+              }
               : undefined,
           tags:
             seed.tags.length > 0
               ? {
-                  connect: seed.tags.map((tag) => ({ name: tag.name })),
-                }
+                connect: seed.tags.map((tag) => ({ name: tag.name })),
+              }
               : undefined,
         },
       });

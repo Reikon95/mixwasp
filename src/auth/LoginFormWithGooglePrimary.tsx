@@ -37,10 +37,10 @@ export function LoginFormWithGooglePrimary() {
     <div>
       <div className="mb-6 flex flex-col items-center text-center">
         <img src={logo} alt="MixWasp" className="mb-3 size-12" />
-        <h2 className="text-xl font-semibold tracking-tight text-gray-900">
+        <h2 className="text-foreground text-xl font-semibold tracking-tight">
           Log in to MixWasp
         </h2>
-        <p className="mt-1 text-sm text-gray-600">
+        <p className="text-muted-foreground mt-1 text-sm">
           The fastest way in is with Google.
         </p>
       </div>
@@ -56,7 +56,7 @@ export function LoginFormWithGooglePrimary() {
           </p>
         )}
         <div className="space-y-2">
-          <Label htmlFor="login-email" className="text-gray-900">
+          <Label htmlFor="login-email">
             Email
           </Label>
           <Input
@@ -67,11 +67,10 @@ export function LoginFormWithGooglePrimary() {
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             disabled={isLoading}
-            className="bg-white text-gray-900"
           />
         </div>
         <div className="space-y-2">
-          <Label htmlFor="login-password" className="text-gray-900">
+          <Label htmlFor="login-password">
             Password
           </Label>
           <Input
@@ -82,7 +81,6 @@ export function LoginFormWithGooglePrimary() {
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             disabled={isLoading}
-            className="bg-white text-gray-900"
           />
         </div>
         <Button type="submit" className="w-full" disabled={isLoading}>

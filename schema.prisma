@@ -23,6 +23,7 @@ model User {
   credits                   Int             @default(3)
 
   mixFavourites             MixFavourite[]
+  clubs                     Club[]
 }
 
 model DailyStats {
@@ -72,6 +73,7 @@ model Mix {
   description              String?
   genres                   Genre[]
   tags                     Tag[]
+  clubs                    Club[]
   favourites               MixFavourite[]
   favouriteCount           Int             @default(0)
 }
@@ -113,4 +115,15 @@ model MixFavourite {
   @@unique([userId, mixId])
   @@index([createdAt])
   @@index([mixId, createdAt])
+}
+
+model Club {
+  id                       Int             @id @default(autoincrement())
+  createdAt                DateTime        @default(now())
+
+  name                     String @unique
+  mixes                    Mix[]
+  users                    User[]
+  userCount                Int             @default(0)
+
 }
