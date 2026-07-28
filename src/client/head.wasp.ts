@@ -12,10 +12,13 @@ export const head: App["head"] = [
   "<meta property='og:site_name' content='MixWasp' />",
   "<meta property='og:url' content='https://mixwasp.com' />",
   "<meta property='og:description' content='Discover, favourite, and share the best DJ mixes with MixWasp.' />",
-  "<meta property='og:image' content='https://mixwasp.com/public-banner.webp' />",
-  "<meta name='twitter:image' content='https://mixwasp.com/public-banner.webp' />",
-  "<meta name='twitter:image:width' content='800' />",
-  "<meta name='twitter:image:height' content='400' />",
+  "<meta property='og:image' content='https://mixwasp.com/output.png' />",
+  "<meta property='og:image:width' content='1024' />",
+  "<meta property='og:image:height' content='1024' />",
+  "<meta property='og:image:alt' content='MixWasp — DJ bee mascot' />",
+  "<meta name='twitter:image' content='https://mixwasp.com/output.png' />",
+  "<meta name='twitter:image:width' content='1024' />",
+  "<meta name='twitter:image:height' content='1024' />",
   "<meta name='twitter:card' content='summary_large_image' />",
   // TODO: You can put your Plausible analytics scripts below (https://docs.opensaas.sh/guides/analytics/):
   // NOTE: Plausible does not use Cookies, so you can simply add the scripts here.

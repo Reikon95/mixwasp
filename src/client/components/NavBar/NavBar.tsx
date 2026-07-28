@@ -74,17 +74,7 @@ export function NavBar({
                 className="text-foreground hover:text-primary flex items-center transition-colors duration-300 ease-in-out"
               >
                 <NavLogo isScrolled={isScrolled} />
-                <span
-                  className={cn(
-                    "text-foreground font-semibold leading-6 transition-all duration-300",
-                    {
-                      "ml-2 text-sm": !isScrolled,
-                      "ml-2 text-xs": isScrolled,
-                    },
-                  )}
-                >
-                  MixWasp
-                </span>
+
               </WaspRouterLink>
 
               <ul className="ml-4 hidden items-center gap-6 lg:flex">

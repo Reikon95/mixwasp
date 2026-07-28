@@ -32,7 +32,7 @@ import {
 export function SubmitMixPage() {
   const navigate = useNavigate();
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const autoFilledRef = useRef<{ title?: string; artistName?: string }>({});
+  const autoFilledRef = useRef<{ title?: string }>({});
 
   const form = useForm<CreateMixInput>({
     resolver: zodResolver(createMixInputSchema),
@@ -77,20 +77,6 @@ export function SubmitMixPage() {
           shouldDirty: true,
         });
         autoFilledRef.current.title = preview.title;
-      }
-    }
-
-    if (preview.artistName) {
-      const currentArtist = form.getValues("artistName");
-      if (
-        !currentArtist.trim() ||
-        currentArtist === autoFilledRef.current.artistName
-      ) {
-        form.setValue("artistName", preview.artistName, {
-          shouldValidate: true,
-          shouldDirty: true,
-        });
-        autoFilledRef.current.artistName = preview.artistName;
       }
     }
   }, [preview, form]);
