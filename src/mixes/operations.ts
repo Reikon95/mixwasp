@@ -190,60 +190,71 @@ export const toggleMixFavourite: ToggleMixFavourite<
     rawArgs,
   );
 
-  const mix = await context.entities.Mix.findUnique({
-    where: { id: mixId },
-  });
-  if (!mix) {
-    throw new HttpError(404, "Mix not found");
-  }
+  const userId = context.user.id;
 
-  const existing = await context.entities.MixFavourite.findUnique({
-    where: {
-      userId_mixId: {
-        userId: context.user.id,
-        mixId,
-      },
-    },
-  });
-
-  if (existing) {
-    const [, updatedMix] = await prisma.$transaction([
-      context.entities.MixFavourite.delete({
-        where: { id: existing.id },
-      }),
-      context.entities.Mix.update({
+  try {
+    return await prisma.$transaction(async (tx) => {
+      const mix = await tx.mix.findUnique({
         where: { id: mixId },
-        data: {
-          favouriteCount: {
-            decrement: mix.favouriteCount > 0 ? 1 : 0,
-          },
+        select: { id: true },
+      });
+      if (!mix) {
+        throw new HttpError(404, "Mix not found");
+      }
+
+      const existing = await tx.mixFavourite.findUnique({
+        where: {
+          userId_mixId: { userId, mixId },
         },
-      }),
-    ]);
+      });
 
-    return {
-      favourited: false,
-      favouriteCount: Math.max(0, updatedMix.favouriteCount),
-    };
+      if (existing) {
+        await tx.mixFavourite.delete({
+          where: { id: existing.id },
+        });
+      } else {
+        await tx.mixFavourite.create({
+          data: {
+            userId,
+            mixId,
+          },
+        });
+      }
+
+      // Recompute from rows so concurrent toggles can't drift the denormalized count.
+      const favouriteCount = await tx.mixFavourite.count({
+        where: { mixId },
+      });
+      await tx.mix.update({
+        where: { id: mixId },
+        data: { favouriteCount },
+      });
+
+      return {
+        favourited: !existing,
+        favouriteCount,
+      };
+    });
+  } catch (err: unknown) {
+    if (err instanceof HttpError) {
+      throw err;
+    }
+    // Unique race on create — treat as already favourited and reconcile count.
+    const favourite = await prisma.mixFavourite.findUnique({
+      where: { userId_mixId: { userId, mixId } },
+    });
+    if (favourite) {
+      const favouriteCount = await prisma.mixFavourite.count({
+        where: { mixId },
+      });
+      await prisma.mix.update({
+        where: { id: mixId },
+        data: { favouriteCount },
+      });
+      return { favourited: true, favouriteCount };
+    }
+    throw err;
   }
-
-  const [, updatedMix] = await prisma.$transaction([
-    context.entities.MixFavourite.create({
-      data: {
-        user: { connect: { id: context.user.id } },
-        mix: { connect: { id: mixId } },
-      },
-    }),
-    context.entities.Mix.update({
-      where: { id: mixId },
-      data: { favouriteCount: { increment: 1 } },
-    }),
-  ]);
-
-  return {
-    favourited: true,
-    favouriteCount: updatedMix.favouriteCount,
-  };
 };
 
 const getPopularMixesInputSchema = z.object({
@@ -269,16 +280,16 @@ function buildPopularMixFilters(args: {
     ...(args.tagId ? { tags: { some: { id: args.tagId } } } : {}),
     ...(query
       ? {
-          OR: [
-            { title: { contains: query, mode: "insensitive" as const } },
-            {
-              artist: {
-                name: { contains: query, mode: "insensitive" as const },
-              },
+        OR: [
+          { title: { contains: query, mode: "insensitive" as const } },
+          {
+            artist: {
+              name: { contains: query, mode: "insensitive" as const },
             },
-            { promoter: { contains: query, mode: "insensitive" as const } },
-          ],
-        }
+          },
+          { promoter: { contains: query, mode: "insensitive" as const } },
+        ],
+      }
       : {}),
   };
 }
@@ -302,12 +313,12 @@ export const getPopularMixes: GetPopularMixes<
         ...mixInclude,
         ...(userId
           ? {
-              favourites: {
-                where: { userId },
-                select: { id: true },
-                take: 1,
-              },
-            }
+            favourites: {
+              where: { userId },
+              select: { id: true },
+              take: 1,
+            },
+          }
           : {}),
       },
       orderBy:
@@ -349,12 +360,12 @@ export const getPopularMixes: GetPopularMixes<
     ...mixInclude,
     ...(userId
       ? {
-          favourites: {
-            where: { userId },
-            select: { id: true },
-            take: 1,
-          },
-        }
+        favourites: {
+          where: { userId },
+          select: { id: true },
+          take: 1,
+        },
+      }
       : {}),
   };
 
@@ -427,19 +438,22 @@ export const getPopularMixes: GetPopularMixes<
   ];
 };
 
+const listMixesLimitSchema = z.number().int().positive().max(100).default(50);
+
 const getArtistMixesInputSchema = z.object({
   artistId: z.number().int().positive(),
+  limit: listMixesLimitSchema,
 });
 
-type GetArtistMixesInput = z.infer<typeof getArtistMixesInputSchema>;
+type GetArtistMixesInput = z.input<typeof getArtistMixesInputSchema>;
 
 export const getArtistMixes: GetArtistMixes<
   GetArtistMixesInput,
   ArtistMixesResult
 > = async (rawArgs, context) => {
-  const { artistId } = ensureArgsSchemaOrThrowHttpError(
+  const { artistId, limit } = ensureArgsSchemaOrThrowHttpError(
     getArtistMixesInputSchema,
-    rawArgs,
+    rawArgs ?? {},
   );
 
   const artist = await context.entities.Artist.findUnique({
@@ -457,15 +471,16 @@ export const getArtistMixes: GetArtistMixes<
       ...mixInclude,
       ...(userId
         ? {
-            favourites: {
-              where: { userId },
-              select: { id: true },
-              take: 1,
-            },
-          }
+          favourites: {
+            where: { userId },
+            select: { id: true },
+            take: 1,
+          },
+        }
         : {}),
     },
     orderBy: [{ favouriteCount: "desc" }, { createdAt: "desc" }],
+    take: limit,
   });
 
   return {
@@ -484,17 +499,18 @@ export const getArtistMixes: GetArtistMixes<
 
 const getGenreMixesInputSchema = z.object({
   genreId: z.number().int().positive(),
+  limit: listMixesLimitSchema,
 });
 
-type GetGenreMixesInput = z.infer<typeof getGenreMixesInputSchema>;
+type GetGenreMixesInput = z.input<typeof getGenreMixesInputSchema>;
 
 export const getGenreMixes: GetGenreMixes<
   GetGenreMixesInput,
   GenreMixesResult
 > = async (rawArgs, context) => {
-  const { genreId } = ensureArgsSchemaOrThrowHttpError(
+  const { genreId, limit } = ensureArgsSchemaOrThrowHttpError(
     getGenreMixesInputSchema,
-    rawArgs,
+    rawArgs ?? {},
   );
 
   const genre = await context.entities.Genre.findUnique({
@@ -512,15 +528,16 @@ export const getGenreMixes: GetGenreMixes<
       ...mixInclude,
       ...(userId
         ? {
-            favourites: {
-              where: { userId },
-              select: { id: true },
-              take: 1,
-            },
-          }
+          favourites: {
+            where: { userId },
+            select: { id: true },
+            take: 1,
+          },
+        }
         : {}),
     },
     orderBy: [{ favouriteCount: "desc" }, { createdAt: "desc" }],
+    take: limit,
   });
 
   return {
@@ -539,17 +556,18 @@ export const getGenreMixes: GetGenreMixes<
 
 const getTagMixesInputSchema = z.object({
   tagId: z.number().int().positive(),
+  limit: listMixesLimitSchema,
 });
 
-type GetTagMixesInput = z.infer<typeof getTagMixesInputSchema>;
+type GetTagMixesInput = z.input<typeof getTagMixesInputSchema>;
 
 export const getTagMixes: GetTagMixes<
   GetTagMixesInput,
   TagMixesResult
 > = async (rawArgs, context) => {
-  const { tagId } = ensureArgsSchemaOrThrowHttpError(
+  const { tagId, limit } = ensureArgsSchemaOrThrowHttpError(
     getTagMixesInputSchema,
-    rawArgs,
+    rawArgs ?? {},
   );
 
   const tag = await context.entities.Tag.findUnique({
@@ -567,15 +585,16 @@ export const getTagMixes: GetTagMixes<
       ...mixInclude,
       ...(userId
         ? {
-            favourites: {
-              where: { userId },
-              select: { id: true },
-              take: 1,
-            },
-          }
+          favourites: {
+            where: { userId },
+            select: { id: true },
+            take: 1,
+          },
+        }
         : {}),
     },
     orderBy: [{ favouriteCount: "desc" }, { createdAt: "desc" }],
+    take: limit,
   });
 
   return {
@@ -592,17 +611,29 @@ export const getTagMixes: GetTagMixes<
   };
 };
 
+const getMyFavouriteMixesInputSchema = z.object({
+  limit: listMixesLimitSchema,
+});
+
+type GetMyFavouriteMixesInput = z.input<typeof getMyFavouriteMixesInputSchema>;
+
 export const getMyFavouriteMixes: GetMyFavouriteMixes<
-  void,
+  GetMyFavouriteMixesInput,
   ArtistMix[]
-> = async (_args, context) => {
+> = async (rawArgs, context) => {
   if (!context.user) {
     throw new HttpError(401, "You must be logged in to view favourites");
   }
 
+  const { limit } = ensureArgsSchemaOrThrowHttpError(
+    getMyFavouriteMixesInputSchema,
+    rawArgs ?? {},
+  );
+
   const favourites = await context.entities.MixFavourite.findMany({
     where: { userId: context.user.id },
     orderBy: { createdAt: "desc" },
+    take: limit,
     include: {
       mix: {
         include: mixInclude,

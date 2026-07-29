@@ -10,7 +10,8 @@ export const createMixInputSchema = z.object({
   link: z
     .url({ error: "Enter a valid URL" })
     .refine(isAllowedMixLink, {
-      message: "Link must be a YouTube, SoundCloud, or Mixcloud URL",
+      message:
+        "Link must be a YouTube, SoundCloud, or Mixcloud URL",
     }),
   promoter: z.string().trim().max(120).optional().or(z.literal("")),
   description: z.string().trim().max(2000).optional().or(z.literal("")),

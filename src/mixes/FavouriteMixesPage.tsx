@@ -23,7 +23,7 @@ export function FavouriteMixesPage() {
     isLoading,
     error,
     refetch,
-  } = useQuery(getMyFavouriteMixes);
+  } = useQuery(getMyFavouriteMixes, { limit: 50 });
 
   const handleToggleFavourite = async (mixId: number) => {
     setTogglingMixId(mixId);
