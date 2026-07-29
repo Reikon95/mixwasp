@@ -1,4 +1,13 @@
-import { Headphones, Heart, Plus, Settings, Shield } from "lucide-react";
+import {
+  Disc3,
+  Headphones,
+  Heart,
+  Mic2,
+  Plus,
+  Search,
+  Settings,
+  Shield,
+} from "lucide-react";
 import { routes } from "wasp/client/router";
 
 export const userMenuItems = [
@@ -6,6 +15,27 @@ export const userMenuItems = [
     name: "Charts",
     to: routes.MixesRoute.to,
     icon: Headphones,
+    isAdminOnly: false,
+    isAuthRequired: false,
+  },
+  {
+    name: "Browse",
+    to: routes.BrowseMixesRoute.to,
+    icon: Search,
+    isAdminOnly: false,
+    isAuthRequired: false,
+  },
+  {
+    name: "Artists",
+    to: routes.ArtistsRoute.to,
+    icon: Mic2,
+    isAdminOnly: false,
+    isAuthRequired: false,
+  },
+  {
+    name: "Genres",
+    to: routes.GenresRoute.to,
+    icon: Disc3,
     isAdminOnly: false,
     isAuthRequired: false,
   },

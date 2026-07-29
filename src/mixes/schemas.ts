@@ -71,6 +71,14 @@ export type MixLinkPreviewResult = {
   };
 };
 
+export type ListedArtist = Artist & {
+  mixCount: number;
+};
+
+export type ListedGenre = Genre & {
+  mixCount: number;
+};
+
 export const searchArtistsInputSchema = z.object({
   query: z.string().trim().max(120),
 });

@@ -63,7 +63,7 @@ export function GenreMixesPage() {
         <div className="mx-auto max-w-4xl text-center">
           <p className="font-medium">Invalid genre</p>
           <Button asChild variant="outline" className="mt-4">
-            <WaspRouterLink to={routes.MixesRoute.to}>Back to charts</WaspRouterLink>
+            <WaspRouterLink to={routes.GenresRoute.to}>Back to genres</WaspRouterLink>
           </Button>
         </div>
       </main>
@@ -74,11 +74,11 @@ export function GenreMixesPage() {
     <main className="px-4 py-10 sm:px-6 lg:px-8">
       <div className="mx-auto max-w-4xl">
         <WaspRouterLink
-          to={routes.MixesRoute.to}
+          to={routes.GenresRoute.to}
           className="text-muted-foreground hover:text-foreground mb-8 inline-flex items-center gap-1.5 text-sm transition-colors"
         >
           <ArrowLeft className="size-4" aria-hidden />
-          Back to charts
+          Back to genres
         </WaspRouterLink>
 
         {isLoading && <MixWaspLoader label="Loading mixes" />}

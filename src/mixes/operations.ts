@@ -1,6 +1,7 @@
 import type { Artist, Genre, Mix, Tag } from "wasp/entities";
 import { HttpError, prisma } from "wasp/server";
 import type {
+  BrowseMixes,
   CreateMix,
   GetArtistMixes,
   GetGenreMixes,
@@ -8,6 +9,8 @@ import type {
   GetMyFavouriteMixes,
   GetPopularMixes,
   GetTagMixes,
+  ListArtists,
+  ListGenres,
   SearchArtists,
   SearchGenres,
   SearchTags,
@@ -23,6 +26,8 @@ import {
   type ArtistMixesResult,
   type CreateMixInput,
   type GenreMixesResult,
+  type ListedArtist,
+  type ListedGenre,
   type MixLinkPreviewResult,
   type PopularMix,
   type PopularityPeriod,
@@ -438,6 +443,57 @@ export const getPopularMixes: GetPopularMixes<
   ];
 };
 
+const browseMixesInputSchema = z.object({
+  limit: z.number().int().positive().max(100).default(50),
+  genreId: z.number().int().positive().optional(),
+  tagId: z.number().int().positive().optional(),
+  q: z.string().trim().max(120).optional(),
+});
+
+type BrowseMixesInput = z.input<typeof browseMixesInputSchema>;
+
+export const browseMixes: BrowseMixes<BrowseMixesInput, ArtistMix[]> = async (
+  rawArgs,
+  context,
+) => {
+  const { limit, genreId, tagId, q } = ensureArgsSchemaOrThrowHttpError(
+    browseMixesInputSchema,
+    rawArgs ?? {},
+  );
+
+  const userId = context.user?.id;
+  const filters = buildPopularMixFilters({ genreId, tagId, q });
+  const hasFilters = Object.keys(filters).length > 0;
+
+  const mixes = await context.entities.Mix.findMany({
+    where: hasFilters ? filters : undefined,
+    include: {
+      ...mixInclude,
+      ...(userId
+        ? {
+            favourites: {
+              where: { userId },
+              select: { id: true },
+              take: 1,
+            },
+          }
+        : {}),
+    },
+    orderBy: [{ createdAt: "desc" }],
+    take: limit,
+  });
+
+  return mixes.map((mix) => {
+    const { favourites, ...rest } = mix as typeof mix & {
+      favourites?: { id: string }[];
+    };
+    return {
+      ...rest,
+      hasFavourited: (favourites?.length ?? 0) > 0,
+    } satisfies ArtistMix;
+  });
+};
+
 const listMixesLimitSchema = z.number().int().positive().max(100).default(50);
 
 const getArtistMixesInputSchema = z.object({
@@ -670,6 +726,72 @@ export const getMixLinkPreview: GetMixLinkPreview<
   }
 
   return fetchMixLinkPreview(link);
+};
+
+const listArtistsInputSchema = z.object({
+  q: z.string().trim().max(120).optional(),
+  limit: z.number().int().positive().max(200).default(100),
+});
+
+type ListArtistsInput = z.input<typeof listArtistsInputSchema>;
+
+export const listArtists: ListArtists<ListArtistsInput, ListedArtist[]> =
+  async (rawArgs, context) => {
+    const { q, limit } = ensureArgsSchemaOrThrowHttpError(
+      listArtistsInputSchema,
+      rawArgs ?? {},
+    );
+    const query = q?.trim();
+
+    const artists = await context.entities.Artist.findMany({
+      where: query
+        ? { name: { contains: query, mode: "insensitive" } }
+        : undefined,
+      orderBy: { name: "asc" },
+      take: limit,
+      include: {
+        _count: { select: { mixes: true } },
+      },
+    });
+
+    return artists.map(({ _count, ...artist }) => ({
+      ...artist,
+      mixCount: _count.mixes,
+    }));
+  };
+
+const listGenresInputSchema = z.object({
+  q: z.string().trim().max(120).optional(),
+  limit: z.number().int().positive().max(200).default(100),
+});
+
+type ListGenresInput = z.input<typeof listGenresInputSchema>;
+
+export const listGenres: ListGenres<ListGenresInput, ListedGenre[]> = async (
+  rawArgs,
+  context,
+) => {
+  const { q, limit } = ensureArgsSchemaOrThrowHttpError(
+    listGenresInputSchema,
+    rawArgs ?? {},
+  );
+  const query = q?.trim();
+
+  const genres = await context.entities.Genre.findMany({
+    where: query
+      ? { name: { contains: query, mode: "insensitive" } }
+      : undefined,
+    orderBy: { name: "asc" },
+    take: limit,
+    include: {
+      _count: { select: { mixes: true } },
+    },
+  });
+
+  return genres.map(({ _count, ...genre }) => ({
+    ...genre,
+    mixCount: _count.mixes,
+  }));
 };
 
 export const searchArtists: SearchArtists<
