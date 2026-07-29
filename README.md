@@ -1,6 +1,9 @@
 # MixWasp
 
-Discover, favourite, and share the best DJ mixes.
+<img width="2652" height="1648" alt="CleanShot 2026-07-29 at 13 33 40@2x" src="https://github.com/user-attachments/assets/958d3718-e0af-4c2e-ba64-f48f2c3ba75e" />
+
+
+## Discover, favourite, and share the best DJ mixes.
 
 Built with [Wasp](https://wasp.sh) and [Supabase](https://supabase.com)
 
@@ -21,6 +24,5 @@ Supabase is used for the database and storage.
 
 Feel free to contribute by selecting any issue and submitting a PR! If the feautre/fix you want to include isn't already in the issues, please raise one before opening a PR. Thanks!
 
-<img width="2652" height="1648" alt="CleanShot 2026-07-29 at 13 33 40@2x" src="https://github.com/user-attachments/assets/958d3718-e0af-4c2e-ba64-f48f2c3ba75e" />
 
 
