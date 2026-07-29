@@ -19,6 +19,7 @@ import { MixRow } from "./MixRow";
 import type { PopularityPeriod } from "./schemas";
 
 const PERIODS: { value: PopularityPeriod; label: string }[] = [
+  { value: "new", label: "New" },
   { value: "today", label: "Today" },
   { value: "week", label: "This week" },
   { value: "month", label: "This month" },
@@ -39,6 +40,7 @@ export function MixesPage() {
     refetch,
   } = useQuery(getPopularMixes, {
     period,
+    limit: 50,
     q: debouncedSearch || undefined,
     genreId: filters.genreId,
     tagId: filters.tagId,
@@ -155,12 +157,16 @@ export function MixesPage() {
             <p className="font-display text-primary text-sm tracking-[0.15em]">
               {hasActiveFilters
                 ? "No mixes match these filters"
-                : "No mixes in this period yet"}
+                : period === "new"
+                  ? "No mixes yet"
+                  : "No mixes in this period yet"}
             </p>
             <p className="text-muted-foreground mt-2 text-sm">
               {hasActiveFilters
                 ? "Try clearing filters, switching period, or searching something else."
-                : "Switch to All time, or submit a mix to get the charts started."}
+                : period === "new"
+                  ? "Submit a mix to kick off the feed."
+                  : "Switch to New or All time, or submit a mix to get the charts started."}
             </p>
             <div className="mt-4 flex flex-wrap items-center justify-center gap-2">
               {hasActiveFilters ? (
@@ -172,16 +178,16 @@ export function MixesPage() {
                 >
                   Clear filters
                 </Button>
-              ) : (
+              ) : period !== "new" ? (
                 <Button
                   type="button"
                   variant="outline"
                   size="sm"
-                  onClick={() => setPeriod("all")}
+                  onClick={() => setPeriod("new")}
                 >
-                  View all time
+                  View new
                 </Button>
-              )}
+              ) : null}
               {user && !hasActiveFilters && (
                 <Button asChild size="sm">
                   <WaspRouterLink to={routes.SubmitMixRoute.to}>

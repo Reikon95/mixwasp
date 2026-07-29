@@ -25,6 +25,7 @@ export const popularityPeriodSchema = z.enum([
   "week",
   "month",
   "all",
+  "new",
 ]);
 
 export type PopularityPeriod = z.infer<typeof popularityPeriodSchema>;

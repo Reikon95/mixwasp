@@ -161,6 +161,7 @@ function getPeriodStart(period: PopularityPeriod): Date | null {
     case "month":
       return new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), 1));
     case "all":
+    case "new":
       return null;
   }
 }
@@ -294,7 +295,7 @@ export const getPopularMixes: GetPopularMixes<
   const filters = buildPopularMixFilters({ genreId, tagId, q });
   const hasFilters = Object.keys(filters).length > 0;
 
-  if (period === "all") {
+  if (period === "all" || period === "new") {
     const mixes = await context.entities.Mix.findMany({
       where: hasFilters ? filters : undefined,
       include: {
@@ -309,7 +310,10 @@ export const getPopularMixes: GetPopularMixes<
             }
           : {}),
       },
-      orderBy: [{ favouriteCount: "desc" }, { createdAt: "desc" }],
+      orderBy:
+        period === "new"
+          ? [{ createdAt: "desc" }]
+          : [{ favouriteCount: "desc" }, { createdAt: "desc" }],
       take: limit,
     });
 

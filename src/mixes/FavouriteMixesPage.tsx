@@ -66,8 +66,8 @@ export function FavouriteMixesPage() {
             {isLoading
               ? "Loading your saved mixes…"
               : mixCount === 1
-                ? "1 mix you've hearted."
-                : `${mixCount} mixes you've hearted.`}
+                ? "1 mix in your rotation."
+                : `${mixCount} mixes in your rotation.`}
           </p>
         </header>
 
