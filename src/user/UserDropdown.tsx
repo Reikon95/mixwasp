@@ -17,10 +17,11 @@ export function UserDropdown({ user }: { user: Partial<UserEntity> }) {
   return (
     <DropdownMenu open={open} onOpenChange={setOpen}>
       <DropdownMenuTrigger asChild>
-        <button className="text-foreground hover:text-primary flex items-center transition-colors duration-300 ease-in-out">
-          <span className="text-foreground mr-2 hidden text-right text-sm font-medium lg:block">
-            {user.username}
-          </span>
+        <button
+          type="button"
+          aria-label="Account menu"
+          className="text-foreground hover:text-primary flex items-center transition-colors duration-300 ease-in-out"
+        >
           <User className="size-5" />
           <ChevronDown className="size-4" />
         </button>
