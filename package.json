@@ -6,7 +6,6 @@
     ".wasp/out/sdk/wasp"
   ],
   "dependencies": {
-    "@google-analytics/data": "4.1.0",
     "@hookform/resolvers": "^5.1.1",
     "@lemonsqueezy/lemonsqueezy.js": "^3.2.0",
     "@polar-sh/sdk": "^0.34.3",
@@ -25,7 +24,6 @@
     "@radix-ui/react-toast": "^1.2.14",
     "@tailwindcss/forms": "^0.5.11",
     "@tailwindcss/typography": "^0.5.19",
-    "apexcharts": "5.10.1",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "cmdk": "^1.1.1",
@@ -34,7 +32,6 @@
     "prettier": "3.1.1",
     "prettier-plugin-tailwindcss": "^0.7.2",
     "react": "^19.2.1",
-    "react-apexcharts": "2.1.0",
     "react-dom": "^19.2.1",
     "react-hook-form": "^7.60.0",
     "react-router": "^8.0.1",
@@ -42,7 +39,6 @@
     "tailwind-merge": "^2.2.1",
     "tailwindcss": "^4.1.18",
     "tailwindcss-animate": "^1.0.7",
-    "vanilla-cookieconsent": "^3.0.1",
     "zod": "^4.3.6"
   },
   "devDependencies": {

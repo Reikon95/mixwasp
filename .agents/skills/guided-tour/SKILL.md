@@ -1,16 +1,16 @@
 ---
 name: guided-tour
-description: Take a guided tour of Open SaaS - walks you through step-by-step through the project structure, features, and customization checklist.
+description: Take a guided tour of MixWasp - walks you through step-by-step through the project structure, features, and customization checklist.
 user_invocable: true
 ---
 
-# Guided Tour of Open SaaS
+# Guided Tour of MixWasp
 
 Follow these steps in order:
 
 ## Step 1: Fetch the Documentation Map
 
-Fetch the Open SaaS documentation map from the [LLMs.txt index](https://docs.opensaas.sh/llms.txt). This contains raw markdown file GitHub URLs of all documentation sections.
+Fetch the starter-kit documentation map from the [LLMs.txt index](https://docs.opensaas.sh/llms.txt). This contains raw markdown file GitHub URLs of all documentation sections.
 
 ## Step 2: Fetch the Guided Tour Guide
 

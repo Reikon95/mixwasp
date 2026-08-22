@@ -1,6 +1,5 @@
 import {
   Calendar,
-  LayoutDashboard,
   LayoutTemplate,
   Settings,
   Sheet,
@@ -100,29 +99,10 @@ export function Sidebar({ sidebarOpen, setSidebarOpen }: SidebarProps) {
             </h3>
 
             <ul className="mb-6 flex flex-col gap-1.5">
-              {/* <!-- Menu Item Dashboard --> */}
-              <NavLink
-                to={routes.AdminRoute.to}
-                end
-                className={({ isActive }) =>
-                  cn(
-                    "text-muted-foreground hover:bg-accent hover:text-accent-foreground group relative flex items-center gap-2.5 rounded-sm px-4 py-2 font-medium duration-300 ease-in-out",
-                    {
-                      "bg-accent text-accent-foreground": isActive,
-                    },
-                  )
-                }
-              >
-                <LayoutDashboard />
-                Dashboard
-              </NavLink>
-
-              {/* <!-- Menu Item Dashboard --> */}
-
               {/* <!-- Menu Item Users --> */}
               <li>
                 <NavLink
-                  to={routes.AdminUsersRoute.to}
+                  to={routes.AdminRoute.to}
                   end
                   className={({ isActive }) =>
                     cn(

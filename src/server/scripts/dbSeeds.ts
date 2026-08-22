@@ -40,84 +40,14 @@ export const seedMockMixes: DbSeedFn = async (prismaClient) => {
 };
 
 /**
- * Seeds DailyStats for the last 14 days, each with PageViewSource rows.
- */
-export const seedMockDailyStats: DbSeedFn = async (prismaClient) => {
-  const sourceNames = ["google", "twitter", "direct", "newsletter", "reddit"];
-  let createdDays = 0;
-
-  for (let daysAgo = 13; daysAgo >= 0; daysAgo--) {
-    const date = startOfUtcDay(daysAgo);
-    const existing = await prismaClient.dailyStats.findUnique({
-      where: { date },
-    });
-    if (existing) {
-      continue;
-    }
-
-    const userCount = faker.number.int({ min: 20, max: 200 });
-    const paidUserCount = faker.number.int({
-      min: 0,
-      max: Math.floor(userCount / 3),
-    });
-    const totalRevenue = faker.number.float({
-      min: 0,
-      max: 5000,
-      precision: 0.01,
-    });
-
-    const dailyStats = await prismaClient.dailyStats.create({
-      data: {
-        date,
-        totalViews: faker.number.int({ min: 100, max: 5000 }),
-        prevDayViewsChangePercent: faker.number
-          .float({ min: -40, max: 60, precision: 0.1 })
-          .toString(),
-        userCount,
-        paidUserCount,
-        userDelta: faker.number.int({ min: -5, max: 25 }),
-        paidUserDelta: faker.number.int({ min: -2, max: 8 }),
-        totalRevenue,
-        totalProfit: Number((totalRevenue * 0.7).toFixed(2)),
-      },
-    });
-
-    const sourcesForDay = faker.helpers.arrayElements(sourceNames, {
-      min: 2,
-      max: sourceNames.length,
-    });
-
-    await prismaClient.pageViewSource.createMany({
-      data: sourcesForDay.map((name) => ({
-        name,
-        date,
-        dailyStatsId: dailyStats.id,
-        visitors: faker.number.int({ min: 10, max: 800 }),
-      })),
-    });
-
-    createdDays += 1;
-  }
-
-  console.log(
-    createdDays > 0
-      ? `Seeded ${createdDays} days of daily stats (with page-view sources).`
-      : "Daily stats already present for the last 14 days; skipped.",
-  );
-};
-
-/**
- * Seeds application Logs rows used by the admin/analytics tooling.
+ * Seeds application Logs rows used by admin tooling.
  */
 export const seedMockLogs: DbSeedFn = async (prismaClient) => {
   const levels = ["info", "warn", "error", "job-error"] as const;
   const messages = [
-    "Daily stats job completed successfully.",
     "Payment webhook received.",
-    "Failed to fetch analytics provider data.",
     "User subscription status updated.",
     "Retrying failed background job.",
-    "Rate limit approaching for analytics API.",
   ];
 
   const logs = Array.from({ length: 25 }, () => ({
@@ -136,7 +66,6 @@ export const seedMockLogs: DbSeedFn = async (prismaClient) => {
 export const seedAll: DbSeedFn = async (prismaClient) => {
   await seedMockUsers(prismaClient);
   await seedMockMixes(prismaClient);
-  await seedMockDailyStats(prismaClient);
   await seedMockLogs(prismaClient);
   console.log("Finished seedAll.");
 };
@@ -178,11 +107,4 @@ function generateMockUserData(): MockUserData {
       ? faker.helpers.arrayElement(getSubscriptionPaymentPlanIds())
       : null,
   };
-}
-
-function startOfUtcDay(daysAgo: number): Date {
-  const date = new Date();
-  date.setUTCHours(0, 0, 0, 0);
-  date.setUTCDate(date.getUTCDate() - daysAgo);
-  return date;
 }

@@ -79,7 +79,7 @@ export function BrowseMixesPage() {
               Browse
             </h1>
             <p className="text-muted-foreground mt-2 text-sm tracking-wide">
-              Search mixes by title, artist, genre, or tag — no chart ranks.
+              Search mixes by title, artist, genre, or tag.
             </p>
           </div>
           {user ? (

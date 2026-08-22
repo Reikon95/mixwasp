@@ -10,7 +10,7 @@ import { assertUnreachable } from "../../shared/utils";
 import { UnhandledWebhookEventError } from "../errors";
 import { getPaymentPlanIdByPaymentProcessorPlanId } from "../paymentProcessorPlans";
 import {
-  SubscriptionStatus as OpenSaasSubscriptionStatus,
+  SubscriptionStatus as MixWaspSubscriptionStatus,
   PaymentPlanId,
   paymentPlans,
 } from "../plans";
@@ -104,7 +104,7 @@ async function handleOrderPaid(
         {
           paymentProcessorUserId: order.customerId,
           paymentPlanId,
-          subscriptionStatus: OpenSaasSubscriptionStatus.Active,
+          subscriptionStatus: MixWaspSubscriptionStatus.Active,
           datePaid: order.createdAt,
         },
         userDelegate,
@@ -119,7 +119,7 @@ async function handleSubscriptionUpdated(
   { data: subscription }: WebhookSubscriptionUpdatedPayload,
   userDelegate: PrismaClient["user"],
 ): Promise<void> {
-  const newSubscriptionStatus = getOpenSaasSubscriptionStatus(subscription);
+  const newSubscriptionStatus = getMixWaspSubscriptionStatus(subscription);
   if (!newSubscriptionStatus) {
     return;
   }
@@ -138,30 +138,30 @@ async function handleSubscriptionUpdated(
   );
 }
 
-function getOpenSaasSubscriptionStatus(
+function getMixWaspSubscriptionStatus(
   subscription: Subscription,
-): OpenSaasSubscriptionStatus | undefined {
-  const polarToOpenSaasSubscriptionStatus: Record<
+): MixWaspSubscriptionStatus | undefined {
+  const polarToMixWaspSubscriptionStatus: Record<
     SubscriptionStatus,
-    OpenSaasSubscriptionStatus | undefined
+    MixWaspSubscriptionStatus | undefined
   > = {
-    trialing: OpenSaasSubscriptionStatus.Active,
-    active: OpenSaasSubscriptionStatus.Active,
-    past_due: OpenSaasSubscriptionStatus.PastDue,
-    canceled: OpenSaasSubscriptionStatus.Deleted,
-    unpaid: OpenSaasSubscriptionStatus.Deleted,
-    incomplete_expired: OpenSaasSubscriptionStatus.Deleted,
+    trialing: MixWaspSubscriptionStatus.Active,
+    active: MixWaspSubscriptionStatus.Active,
+    past_due: MixWaspSubscriptionStatus.PastDue,
+    canceled: MixWaspSubscriptionStatus.Deleted,
+    unpaid: MixWaspSubscriptionStatus.Deleted,
+    incomplete_expired: MixWaspSubscriptionStatus.Deleted,
     incomplete: undefined,
   };
 
   const subscriptionStatus =
-    polarToOpenSaasSubscriptionStatus[subscription.status];
+    polarToMixWaspSubscriptionStatus[subscription.status];
 
   if (
-    subscriptionStatus === OpenSaasSubscriptionStatus.Active &&
+    subscriptionStatus === MixWaspSubscriptionStatus.Active &&
     subscription.cancelAtPeriodEnd
   ) {
-    return OpenSaasSubscriptionStatus.CancelAtPeriodEnd;
+    return MixWaspSubscriptionStatus.CancelAtPeriodEnd;
   }
 
   return subscriptionStatus;

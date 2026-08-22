@@ -15,14 +15,39 @@ Supabase is used for the database and storage.
 
 ### Running locally
 
-- Unless you want to deploy it somewhere, you shouldn't need any environment variables.
+1. **Copy the example server env file** (required — most Wasp commands fail env validation without `.env.server`):
 
-- Run the database with `wasp start db` and leave it running.
-- [OPTIONAL]: If this is the first time starting the app, or you've just made changes to your entities/prisma schema, also run `wasp db migrate-dev`.
-- Run wasp db seed and select all seed files to get some realistic data in the app to play with
-- Run `wasp start` and leave it running. This will install the app.
+```sh
+cp .env.server.example .env.server
+```
 
-Feel free to contribute by selecting any issue and submitting a PR! If the feautre/fix you want to include isn't already in the issues, please raise one before opening a PR. Thanks!
+2. **Email for local login (important)**
 
+   This repo defaults to Wasp’s **`Dummy`** email provider in `src/server/emailSender.wasp.ts`. That is how local signup/login works without Resend:
 
+   - No real email is sent.
+   - The verification / password-reset message (including the link) is **printed in the `wasp start` server terminal**.
+   - Copy that link from the logs to finish verifying your account.
+
+   This is **expected Wasp behaviour**, not a bug: if `provider` is `"Resend"`, Wasp always calls Resend. It will **not** fall back to logging emails when `RESEND_API_KEY` is missing or invalid — you get an API key error instead.
+
+   For production (or if you want real emails locally), set a valid `RESEND_API_KEY` in `.env.server` and switch the provider:
+
+```ts
+// src/server/emailSender.wasp.ts
+export const emailSender: EmailSender = {
+  provider: "Resend", // was "Dummy"
+  defaultFrom: {
+    name: "MixWasp",
+    email: "noreply@mixwasp.com", // must be allowed by your Resend domain
+  },
+};
+```
+
+3. Run the database with `wasp start db` and leave it running.
+4. [OPTIONAL]: If this is the first time starting the app, or you've just made changes to your entities/prisma schema, also run `wasp db migrate-dev`.
+5. Run `wasp db seed` and select all seed files to get some realistic data in the app to play with.
+6. Run `wasp start` and leave it running. This will install the app.
+
+Feel free to contribute by selecting any issue and submitting a PR! If the feature/fix you want to include isn't already in the issues, please raise one before opening a PR. Thanks!
 

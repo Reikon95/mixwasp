@@ -1,6 +1,5 @@
 import { page, route, type Spec } from "@wasp.sh/spec";
 
-import { AnalyticsDashboardPage } from "./dashboards/analytics/AnalyticsDashboardPage" with { type: "ref" };
 import { MessagesPage } from "./dashboards/messages/MessagesPage" with { type: "ref" };
 import { UsersDashboardPage } from "./dashboards/users/UsersDashboardPage" with { type: "ref" };
 import { CalendarPage } from "./elements/calendar/CalendarPage" with { type: "ref" };
@@ -11,7 +10,7 @@ export const adminSpec: Spec = [
   route(
     "AdminRoute",
     "/admin",
-    page(AnalyticsDashboardPage, { authRequired: true }),
+    page(UsersDashboardPage, { authRequired: true }),
   ),
   route(
     "AdminUsersRoute",

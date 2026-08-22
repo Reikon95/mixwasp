@@ -5,7 +5,6 @@ import { Toaster } from "../client/components/ui/toaster";
 import "./Main.css";
 import { NavBar } from "./components/NavBar/NavBar";
 import { appNavigationItems } from "./components/NavBar/constants";
-import { CookieConsentBanner } from "./components/cookie-consent/Banner";
 import { useColorMode } from "./hooks/useColorMode";
 
 /**
@@ -55,7 +54,6 @@ export function App() {
         )}
       </div>
       <Toaster position="bottom-right" />
-      <CookieConsentBanner />
     </>
   );
 }

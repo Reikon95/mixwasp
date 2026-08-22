@@ -5,14 +5,12 @@ import { NotFoundPage } from "./src/client/components/NotFoundPage" with { type:
 import { serverEnvValidationSchema } from "./src/env" with { type: "ref" };
 import {
   seedAll,
-  seedMockDailyStats,
   seedMockLogs,
   seedMockMixes,
   seedMockUsers,
 } from "./src/server/scripts/dbSeeds" with { type: "ref" };
 
 import { adminSpec } from "./src/admin/admin.wasp";
-import { analyticsSpec } from "./src/analytics/analytics.wasp";
 import { authConfig, authSpec } from "./src/auth/auth.wasp";
 import { head } from "./src/client/head.wasp";
 import { mixesSpec } from "./src/mixes/mixes.wasp";
@@ -21,7 +19,7 @@ import { emailSender } from "./src/server/emailSender.wasp";
 import { userSpec } from "./src/user/user.wasp";
 
 export default app({
-  name: "OpenSaaS",
+  name: "MixWasp",
   wasp: { version: "^0.25.0" },
   title: "MixWasp",
   head,
@@ -29,13 +27,7 @@ export default app({
   db: {
     // Run `wasp db seed` (or `wasp db seed <name>`) to populate the DB.
     // https://wasp.sh/docs/data-model/backends#seeding-the-database
-    seeds: [
-      seedMockUsers,
-      seedMockMixes,
-      seedMockDailyStats,
-      seedMockLogs,
-      seedAll,
-    ],
+    seeds: [seedMockUsers, seedMockMixes, seedMockLogs, seedAll],
   },
   client: {
     rootComponent: App,
@@ -49,7 +41,6 @@ export default app({
     authSpec,
     userSpec,
     paymentSpec,
-    analyticsSpec,
     adminSpec,
     route("NotFoundRoute", "*", page(NotFoundPage)),
   ],

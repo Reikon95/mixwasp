@@ -8,7 +8,7 @@ user_invocable: true
 
 ## Step 1: Inform the User
 
-Let the user know that Wasp agent skills (also called plugins) are available for this project. These skills add Wasp-specific knowledge and best practices to their AI coding tools, helping them get better results when working with Wasp and Open SaaS.
+Let the user know that Wasp agent skills (also called plugins) are available for this project. These skills add Wasp-specific knowledge and best practices to their AI coding tools, helping them get better results when working with Wasp and MixWasp.
 
 ## Step 2: Fetch Installation Instructions
 

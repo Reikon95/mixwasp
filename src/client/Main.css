@@ -544,38 +544,3 @@
 .tableCheckbox:checked ~ div {
   @apply bg-primary border-primary;
 }
-
-.apexcharts-legend-text {
-  @apply text-muted-foreground!;
-}
-.apexcharts-text {
-  @apply fill-muted-foreground!;
-}
-.apexcharts-xcrosshairs {
-  @apply fill-border!;
-}
-.apexcharts-gridline {
-  @apply stroke-border!;
-}
-.apexcharts-series.apexcharts-pie-series path {
-  @apply dark:stroke-transparent!;
-}
-.apexcharts-legend-series {
-  @apply inline-flex! gap-1.5;
-}
-.apexcharts-tooltip.apexcharts-theme-light {
-  @apply dark:bg-card! dark:border-border!;
-}
-.apexcharts-tooltip.apexcharts-theme-light .apexcharts-tooltip-title {
-  @apply dark:bg-muted! dark:border-border!;
-}
-.apexcharts-xaxistooltip,
-.apexcharts-yaxistooltip {
-  @apply dark:bg-muted! dark:border-muted! dark:text-muted-foreground!;
-}
-.apexcharts-xaxistooltip-bottom:after {
-  @apply dark:border-b-muted!;
-}
-.apexcharts-xaxistooltip-bottom:before {
-  @apply dark:border-b-muted!;
-}

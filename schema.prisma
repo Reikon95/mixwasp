@@ -26,33 +26,6 @@ model User {
   clubs                     Club[]
 }
 
-model DailyStats {
-  id                               Int             @id @default(autoincrement())
-  date                             DateTime        @default(now()) @unique
-
-  totalViews                       Int             @default(0)
-  prevDayViewsChangePercent        String          @default("0")
-  userCount                        Int             @default(0)
-  paidUserCount                    Int             @default(0)
-  userDelta                        Int             @default(0)
-  paidUserDelta                    Int             @default(0)
-  totalRevenue                     Float           @default(0)
-  totalProfit                      Float           @default(0)
-
-  sources                          PageViewSource[]
-}
-
-model PageViewSource {
-  @@id([date, name])
-  name                     String
-  date                     DateTime        @default(now())
-
-  dailyStats               DailyStats?     @relation(fields: [dailyStatsId], references: [id])
-  dailyStatsId             Int?
-
-  visitors                 Int
-}
-
 model Logs {
   id                       Int             @id @default(autoincrement())
   createdAt                DateTime        @default(now())

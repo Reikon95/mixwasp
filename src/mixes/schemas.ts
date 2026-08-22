@@ -88,3 +88,88 @@ export type SearchArtistsInput = z.input<typeof searchArtistsInputSchema>;
 export const searchNamesInputSchema = searchArtistsInputSchema;
 
 export type SearchNamesInput = z.input<typeof searchNamesInputSchema>;
+
+export const toggleMixFavouriteInputSchema = z.object({
+  mixId: z.number().int().positive(),
+});
+
+export type ToggleMixFavouriteInput = z.infer<
+  typeof toggleMixFavouriteInputSchema
+>;
+
+export const getPopularMixesInputSchema = z.object({
+  period: popularityPeriodSchema.default("all"),
+  limit: z.number().int().positive().max(100).default(50),
+  genreId: z.number().int().positive().optional(),
+  tagId: z.number().int().positive().optional(),
+  q: z.string().trim().max(120).optional(),
+});
+
+export type GetPopularMixesInput = z.input<typeof getPopularMixesInputSchema>;
+
+export const browseMixesInputSchema = z.object({
+  limit: z.number().int().positive().max(100).default(50),
+  genreId: z.number().int().positive().optional(),
+  tagId: z.number().int().positive().optional(),
+  q: z.string().trim().max(120).optional(),
+});
+
+export type BrowseMixesInput = z.input<typeof browseMixesInputSchema>;
+
+export const listMixesLimitSchema = z
+  .number()
+  .int()
+  .positive()
+  .max(100)
+  .default(50);
+
+export const getArtistMixesInputSchema = z.object({
+  artistId: z.number().int().positive(),
+  limit: listMixesLimitSchema,
+});
+
+export type GetArtistMixesInput = z.input<typeof getArtistMixesInputSchema>;
+
+export const getGenreMixesInputSchema = z.object({
+  genreId: z.number().int().positive(),
+  limit: listMixesLimitSchema,
+});
+
+export type GetGenreMixesInput = z.input<typeof getGenreMixesInputSchema>;
+
+export const getTagMixesInputSchema = z.object({
+  tagId: z.number().int().positive(),
+  limit: listMixesLimitSchema,
+});
+
+export type GetTagMixesInput = z.input<typeof getTagMixesInputSchema>;
+
+export const getMyFavouriteMixesInputSchema = z.object({
+  limit: listMixesLimitSchema,
+});
+
+export type GetMyFavouriteMixesInput = z.input<
+  typeof getMyFavouriteMixesInputSchema
+>;
+
+export const getMixLinkPreviewInputSchema = z.object({
+  link: z.url(),
+});
+
+export type GetMixLinkPreviewInput = z.infer<
+  typeof getMixLinkPreviewInputSchema
+>;
+
+export const listArtistsInputSchema = z.object({
+  q: z.string().trim().max(120).optional(),
+  limit: z.number().int().positive().max(200).default(100),
+});
+
+export type ListArtistsInput = z.input<typeof listArtistsInputSchema>;
+
+export const listGenresInputSchema = z.object({
+  q: z.string().trim().max(120).optional(),
+  limit: z.number().int().positive().max(200).default(100),
+});
+
+export type ListGenresInput = z.input<typeof listGenresInputSchema>;

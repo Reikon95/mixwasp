@@ -1,16 +1,16 @@
 ---
 name: getting-started
-description: Get started with your Open SaaS project - fetches docs, checks Wasp installation, and helps you start your database and app.
+description: Get started with your MixWasp project - fetches docs, checks Wasp installation, and helps you start your database and app.
 user_invocable: true
 ---
 
-# Getting Started with Open SaaS
+# Getting Started with MixWasp
 
 Follow these steps in order:
 
 ## Step 1: Fetch the Documentation Map
 
-Fetch the Open SaaS documentation map from the [LLMs.txt index](https://docs.opensaas.sh/llms.txt). This contains raw markdown file GitHub URLs of all documentation sections.
+Fetch the starter-kit documentation map from the [LLMs.txt index](https://docs.opensaas.sh/llms.txt). This contains raw markdown file GitHub URLs of all documentation sections.
 
 ## Step 2: Fetch the Getting Started Guide
 

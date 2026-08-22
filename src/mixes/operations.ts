@@ -1,5 +1,5 @@
 import type { Artist, Genre, Mix, Tag } from "wasp/entities";
-import { HttpError, prisma } from "wasp/server";
+import { HttpError, type PrismaClient } from "wasp/server";
 import type {
   BrowseMixes,
   CreateMix,
@@ -17,25 +17,43 @@ import type {
   ToggleMixFavourite,
 } from "wasp/server/operations";
 
-import * as z from "zod";
 import { ensureArgsSchemaOrThrowHttpError } from "../server/validation";
 import {
+  browseMixesInputSchema,
   createMixInputSchema,
-  popularityPeriodSchema,
+  getArtistMixesInputSchema,
+  getGenreMixesInputSchema,
+  getMixLinkPreviewInputSchema,
+  getMyFavouriteMixesInputSchema,
+  getPopularMixesInputSchema,
+  getTagMixesInputSchema,
+  listArtistsInputSchema,
+  listGenresInputSchema,
+  searchArtistsInputSchema,
+  searchNamesInputSchema,
+  toggleMixFavouriteInputSchema,
   type ArtistMix,
   type ArtistMixesResult,
+  type BrowseMixesInput,
   type CreateMixInput,
   type GenreMixesResult,
+  type GetArtistMixesInput,
+  type GetGenreMixesInput,
+  type GetMixLinkPreviewInput,
+  type GetMyFavouriteMixesInput,
+  type GetPopularMixesInput,
+  type GetTagMixesInput,
+  type ListArtistsInput,
   type ListedArtist,
   type ListedGenre,
+  type ListGenresInput,
   type MixLinkPreviewResult,
   type PopularMix,
   type PopularityPeriod,
   type SearchArtistsInput,
   type SearchNamesInput,
   type TagMixesResult,
-  searchArtistsInputSchema,
-  searchNamesInputSchema,
+  type ToggleMixFavouriteInput,
 } from "./schemas";
 import { fetchMixLinkPreview } from "./mixLinkPreview";
 import { isAllowedMixLink } from "./mixEmbed";
@@ -53,30 +71,36 @@ function parseNameList(value: string | undefined): string[] {
   return [...new Set(names.map((name) => name.replace(/\s+/g, " ")))];
 }
 
-async function findOrCreateArtistByName(name: string): Promise<Artist> {
-  const existing = await prisma.artist.findFirst({
+async function findOrCreateArtistByName(
+  name: string,
+  artistDelegate: PrismaClient["artist"],
+): Promise<Artist> {
+  const existing = await artistDelegate.findFirst({
     where: { name: { equals: name, mode: "insensitive" } },
   });
   if (existing) {
     return existing;
   }
-  return prisma.artist.upsert({
+  return artistDelegate.upsert({
     where: { name },
     update: {},
     create: { name },
   });
 }
 
-async function findOrCreateGenresByName(names: string[]): Promise<Genre[]> {
+async function findOrCreateGenresByName(
+  names: string[],
+  genreDelegate: PrismaClient["genre"],
+): Promise<Genre[]> {
   return Promise.all(
     names.map(async (name) => {
-      const existing = await prisma.genre.findFirst({
+      const existing = await genreDelegate.findFirst({
         where: { name: { equals: name, mode: "insensitive" } },
       });
       if (existing) {
         return existing;
       }
-      return prisma.genre.upsert({
+      return genreDelegate.upsert({
         where: { name },
         update: {},
         create: { name },
@@ -85,16 +109,19 @@ async function findOrCreateGenresByName(names: string[]): Promise<Genre[]> {
   );
 }
 
-async function findOrCreateTagsByName(names: string[]): Promise<Tag[]> {
+async function findOrCreateTagsByName(
+  names: string[],
+  tagDelegate: PrismaClient["tag"],
+): Promise<Tag[]> {
   return Promise.all(
     names.map(async (name) => {
-      const existing = await prisma.tag.findFirst({
+      const existing = await tagDelegate.findFirst({
         where: { name: { equals: name, mode: "insensitive" } },
       });
       if (existing) {
         return existing;
       }
-      return prisma.tag.upsert({
+      return tagDelegate.upsert({
         where: { name },
         update: {},
         create: { name },
@@ -125,9 +152,18 @@ export const createMix: CreateMix<CreateMixInput, CreatedMix> = async (
 
   const args = ensureArgsSchemaOrThrowHttpError(createMixInputSchema, rawArgs);
 
-  const artist = await findOrCreateArtistByName(args.artistName);
-  const genres = await findOrCreateGenresByName(parseNameList(args.genres));
-  const tags = await findOrCreateTagsByName(parseNameList(args.tags));
+  const artist = await findOrCreateArtistByName(
+    args.artistName,
+    context.entities.Artist,
+  );
+  const genres = await findOrCreateGenresByName(
+    parseNameList(args.genres),
+    context.entities.Genre,
+  );
+  const tags = await findOrCreateTagsByName(
+    parseNameList(args.tags),
+    context.entities.Tag,
+  );
 
   return context.entities.Mix.create({
     data: {
@@ -171,16 +207,25 @@ function getPeriodStart(period: PopularityPeriod): Date | null {
   }
 }
 
-const toggleMixFavouriteInputSchema = z.object({
-  mixId: z.number().int().positive(),
-});
-
-type ToggleMixFavouriteInput = z.infer<typeof toggleMixFavouriteInputSchema>;
-
 type ToggleMixFavouriteResult = {
   favourited: boolean;
   favouriteCount: number;
 };
+
+async function recountMixFavourites(
+  mixId: number,
+  mixDelegate: PrismaClient["mix"],
+  mixFavouriteDelegate: PrismaClient["mixFavourite"],
+): Promise<number> {
+  const favouriteCount = await mixFavouriteDelegate.count({
+    where: { mixId },
+  });
+  await mixDelegate.update({
+    where: { id: mixId },
+    data: { favouriteCount },
+  });
+  return favouriteCount;
+}
 
 export const toggleMixFavourite: ToggleMixFavourite<
   ToggleMixFavouriteInput,
@@ -196,81 +241,66 @@ export const toggleMixFavourite: ToggleMixFavourite<
   );
 
   const userId = context.user.id;
+  const mixDelegate = context.entities.Mix;
+  const mixFavouriteDelegate = context.entities.MixFavourite;
 
   try {
-    return await prisma.$transaction(async (tx) => {
-      const mix = await tx.mix.findUnique({
-        where: { id: mixId },
-        select: { id: true },
-      });
-      if (!mix) {
-        throw new HttpError(404, "Mix not found");
-      }
+    const mix = await mixDelegate.findUnique({
+      where: { id: mixId },
+      select: { id: true },
+    });
+    if (!mix) {
+      throw new HttpError(404, "Mix not found");
+    }
 
-      const existing = await tx.mixFavourite.findUnique({
-        where: {
-          userId_mixId: { userId, mixId },
+    const existing = await mixFavouriteDelegate.findUnique({
+      where: {
+        userId_mixId: { userId, mixId },
+      },
+    });
+
+    if (existing) {
+      await mixFavouriteDelegate.delete({
+        where: { id: existing.id },
+      });
+    } else {
+      await mixFavouriteDelegate.create({
+        data: {
+          userId,
+          mixId,
         },
       });
+    }
 
-      if (existing) {
-        await tx.mixFavourite.delete({
-          where: { id: existing.id },
-        });
-      } else {
-        await tx.mixFavourite.create({
-          data: {
-            userId,
-            mixId,
-          },
-        });
-      }
+    // Recompute from rows so concurrent toggles can't drift the denormalized count.
+    const favouriteCount = await recountMixFavourites(
+      mixId,
+      mixDelegate,
+      mixFavouriteDelegate,
+    );
 
-      // Recompute from rows so concurrent toggles can't drift the denormalized count.
-      const favouriteCount = await tx.mixFavourite.count({
-        where: { mixId },
-      });
-      await tx.mix.update({
-        where: { id: mixId },
-        data: { favouriteCount },
-      });
-
-      return {
-        favourited: !existing,
-        favouriteCount,
-      };
-    });
+    return {
+      favourited: !existing,
+      favouriteCount,
+    };
   } catch (err: unknown) {
     if (err instanceof HttpError) {
       throw err;
     }
-    // Unique race on create — treat as already favourited and reconcile count.
-    const favourite = await prisma.mixFavourite.findUnique({
+    const favourite = await mixFavouriteDelegate.findUnique({
       where: { userId_mixId: { userId, mixId } },
     });
     if (favourite) {
-      const favouriteCount = await prisma.mixFavourite.count({
-        where: { mixId },
-      });
-      await prisma.mix.update({
-        where: { id: mixId },
-        data: { favouriteCount },
-      });
+      const favouriteCount = await recountMixFavourites(
+        mixId,
+        mixDelegate,
+        mixFavouriteDelegate,
+      );
       return { favourited: true, favouriteCount };
     }
     throw err;
   }
 };
-
-const getPopularMixesInputSchema = z.object({
-  period: popularityPeriodSchema.default("all"),
-  limit: z.number().int().positive().max(100).default(50),
-  genreId: z.number().int().positive().optional(),
-  tagId: z.number().int().positive().optional(),
-  q: z.string().trim().max(120).optional(),
-});
-
-type GetPopularMixesInput = z.input<typeof getPopularMixesInputSchema>;
 
 function buildPopularMixFilters(args: {
   genreId?: number;
@@ -346,7 +376,7 @@ export const getPopularMixes: GetPopularMixes<
   }
 
   // Over-fetch IDs when filters are active so ranking still fills after filtering.
-  const grouped = await prisma.mixFavourite.groupBy({
+  const grouped = await context.entities.MixFavourite.groupBy({
     by: ["mixId"],
     where: {
       createdAt: { gte: since! },
@@ -443,15 +473,6 @@ export const getPopularMixes: GetPopularMixes<
   ];
 };
 
-const browseMixesInputSchema = z.object({
-  limit: z.number().int().positive().max(100).default(50),
-  genreId: z.number().int().positive().optional(),
-  tagId: z.number().int().positive().optional(),
-  q: z.string().trim().max(120).optional(),
-});
-
-type BrowseMixesInput = z.input<typeof browseMixesInputSchema>;
-
 export const browseMixes: BrowseMixes<BrowseMixesInput, ArtistMix[]> = async (
   rawArgs,
   context,
@@ -471,12 +492,12 @@ export const browseMixes: BrowseMixes<BrowseMixesInput, ArtistMix[]> = async (
       ...mixInclude,
       ...(userId
         ? {
-            favourites: {
-              where: { userId },
-              select: { id: true },
-              take: 1,
-            },
-          }
+          favourites: {
+            where: { userId },
+            select: { id: true },
+            take: 1,
+          },
+        }
         : {}),
     },
     orderBy: [{ createdAt: "desc" }],
@@ -493,15 +514,6 @@ export const browseMixes: BrowseMixes<BrowseMixesInput, ArtistMix[]> = async (
     } satisfies ArtistMix;
   });
 };
-
-const listMixesLimitSchema = z.number().int().positive().max(100).default(50);
-
-const getArtistMixesInputSchema = z.object({
-  artistId: z.number().int().positive(),
-  limit: listMixesLimitSchema,
-});
-
-type GetArtistMixesInput = z.input<typeof getArtistMixesInputSchema>;
 
 export const getArtistMixes: GetArtistMixes<
   GetArtistMixesInput,
@@ -553,13 +565,6 @@ export const getArtistMixes: GetArtistMixes<
   };
 };
 
-const getGenreMixesInputSchema = z.object({
-  genreId: z.number().int().positive(),
-  limit: listMixesLimitSchema,
-});
-
-type GetGenreMixesInput = z.input<typeof getGenreMixesInputSchema>;
-
 export const getGenreMixes: GetGenreMixes<
   GetGenreMixesInput,
   GenreMixesResult
@@ -609,13 +614,6 @@ export const getGenreMixes: GetGenreMixes<
     }),
   };
 };
-
-const getTagMixesInputSchema = z.object({
-  tagId: z.number().int().positive(),
-  limit: listMixesLimitSchema,
-});
-
-type GetTagMixesInput = z.input<typeof getTagMixesInputSchema>;
 
 export const getTagMixes: GetTagMixes<
   GetTagMixesInput,
@@ -667,12 +665,6 @@ export const getTagMixes: GetTagMixes<
   };
 };
 
-const getMyFavouriteMixesInputSchema = z.object({
-  limit: listMixesLimitSchema,
-});
-
-type GetMyFavouriteMixesInput = z.input<typeof getMyFavouriteMixesInputSchema>;
-
 export const getMyFavouriteMixes: GetMyFavouriteMixes<
   GetMyFavouriteMixesInput,
   ArtistMix[]
@@ -703,12 +695,6 @@ export const getMyFavouriteMixes: GetMyFavouriteMixes<
   }));
 };
 
-const getMixLinkPreviewInputSchema = z.object({
-  link: z.url(),
-});
-
-type GetMixLinkPreviewInput = z.infer<typeof getMixLinkPreviewInputSchema>;
-
 export const getMixLinkPreview: GetMixLinkPreview<
   GetMixLinkPreviewInput,
   MixLinkPreviewResult
@@ -727,13 +713,6 @@ export const getMixLinkPreview: GetMixLinkPreview<
 
   return fetchMixLinkPreview(link);
 };
-
-const listArtistsInputSchema = z.object({
-  q: z.string().trim().max(120).optional(),
-  limit: z.number().int().positive().max(200).default(100),
-});
-
-type ListArtistsInput = z.input<typeof listArtistsInputSchema>;
 
 export const listArtists: ListArtists<ListArtistsInput, ListedArtist[]> =
   async (rawArgs, context) => {
@@ -759,13 +738,6 @@ export const listArtists: ListArtists<ListArtistsInput, ListedArtist[]> =
       mixCount: _count.mixes,
     }));
   };
-
-const listGenresInputSchema = z.object({
-  q: z.string().trim().max(120).optional(),
-  limit: z.number().int().positive().max(200).default(100),
-});
-
-type ListGenresInput = z.input<typeof listGenresInputSchema>;
 
 export const listGenres: ListGenres<ListGenresInput, ListedGenre[]> = async (
   rawArgs,
