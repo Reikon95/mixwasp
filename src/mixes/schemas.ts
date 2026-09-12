@@ -173,3 +173,23 @@ export const listGenresInputSchema = z.object({
 });
 
 export type ListGenresInput = z.input<typeof listGenresInputSchema>;
+
+export const findExistingMixInputSchema = z
+  .object({
+    title: z.string().trim().max(200).optional(),
+    link: z.string().trim().max(2000).optional(),
+  })
+  .refine((value) => Boolean(value.title?.trim() || value.link?.trim()), {
+    message: "Provide a title or link to check",
+  });
+
+export type FindExistingMixInput = z.input<typeof findExistingMixInputSchema>;
+
+export type ExistingMixMatch = Mix & {
+  artist: Artist;
+};
+
+export type FindExistingMixResult = {
+  linkMatch: ExistingMixMatch | null;
+  titleMatch: ExistingMixMatch | null;
+};

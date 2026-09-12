@@ -1,9 +1,14 @@
-import { createMix, getMixLinkPreview, useQuery } from "wasp/client/operations";
+import {
+  createMix,
+  findExistingMix,
+  getMixLinkPreview,
+  useQuery,
+} from "wasp/client/operations";
 import { useNavigate } from "react-router";
 import { Link as WaspRouterLink, routes } from "wasp/client/router";
 
 import { zodResolver } from "@hookform/resolvers/zod";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, ExternalLink } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { useForm } from "react-hook-form";
 import { Button } from "../client/components/ui/button";
@@ -29,7 +34,57 @@ import { isAllowedMixLink } from "./mixEmbed";
 import {
   createMixInputSchema,
   type CreateMixInput,
+  type ExistingMixMatch,
 } from "./schemas";
+
+function ExistingMixSuggestion({
+  match,
+  reason,
+}: {
+  match: ExistingMixMatch;
+  reason: "link" | "title";
+}) {
+  return (
+    <div
+      role="status"
+      className="border-primary/40 bg-primary/5 mt-3 space-y-2 border border-dashed px-3 py-3 text-sm"
+    >
+      <p className="font-display text-primary text-xs tracking-[0.15em] uppercase">
+        {reason === "link"
+          ? "This link is already on MixWasp"
+          : "A mix with this title already exists"}
+      </p>
+      <p className="text-foreground leading-snug">
+        <span className="font-medium">{match.title}</span>
+        <span className="text-muted-foreground"> by </span>
+        <WaspRouterLink
+          to={routes.ArtistMixesRoute.to}
+          params={{ artistId: match.artist.id }}
+          className="text-accent hover:text-primary underline-offset-4 hover:underline"
+        >
+          {match.artist.name}
+        </WaspRouterLink>
+      </p>
+      <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
+        <a
+          href={match.link}
+          target="_blank"
+          rel="noreferrer"
+          className="text-primary inline-flex items-center gap-1 text-xs tracking-wide uppercase underline-offset-4 hover:underline"
+        >
+          Open mix
+          <ExternalLink className="size-3.5" aria-hidden />
+        </a>
+        <WaspRouterLink
+          to={routes.BrowseMixesRoute.to}
+          className="text-muted-foreground hover:text-primary text-xs tracking-wide uppercase underline-offset-4 hover:underline"
+        >
+          Find it in Browse
+        </WaspRouterLink>
+      </div>
+    </div>
+  );
+}
 
 export function SubmitMixPage() {
   const navigate = useNavigate();
@@ -50,8 +105,12 @@ export function SubmitMixPage() {
   });
 
   const link = form.watch("link");
+  const title = form.watch("title");
   const debouncedLink = useDebounce(link.trim(), 400);
+  const debouncedTitle = useDebounce(title.trim(), 400);
   const canPreview = debouncedLink.length > 0 && isAllowedMixLink(debouncedLink);
+  const canCheckExisting =
+    debouncedLink.length > 0 || debouncedTitle.length > 0;
 
   const {
     data: preview,
@@ -62,6 +121,24 @@ export function SubmitMixPage() {
     { link: debouncedLink },
     { enabled: canPreview },
   );
+
+  const { data: existingMatches } = useQuery(
+    findExistingMix,
+    {
+      link: debouncedLink || undefined,
+      title: debouncedTitle || undefined,
+    },
+    { enabled: canCheckExisting },
+  );
+
+  const linkMatch = existingMatches?.linkMatch ?? null;
+  const distinctTitleMatch =
+    existingMatches?.titleMatch &&
+    (!linkMatch || existingMatches.titleMatch.id !== linkMatch.id)
+      ? existingMatches.titleMatch
+      : null;
+
+  const hasBlockingDuplicate = Boolean(linkMatch || distinctTitleMatch);
 
   useEffect(() => {
     if (!preview) {
@@ -84,6 +161,15 @@ export function SubmitMixPage() {
   }, [preview, form]);
 
   const onSubmit = async (values: CreateMixInput) => {
+    if (hasBlockingDuplicate) {
+      toast({
+        title: "Mix already exists",
+        description: "Use the suggestion below — no need to submit it again.",
+        variant: "destructive",
+      });
+      return;
+    }
+
     setIsSubmitting(true);
     try {
       const mix = await createMix(values);
@@ -94,9 +180,13 @@ export function SubmitMixPage() {
       navigate(routes.MixesRoute.to);
     } catch (err: unknown) {
       console.error(err);
+      const message =
+        err instanceof Error && err.message
+          ? err.message
+          : "Check your details and try again.";
       toast({
         title: "Could not submit mix",
-        description: "Check your details and try again.",
+        description: message,
         variant: "destructive",
       });
     } finally {
@@ -148,7 +238,6 @@ export function SubmitMixPage() {
             <h1 className="text-phosphor text-3xl font-bold tracking-[0.12em] sm:text-5xl">
               Submit a mix
             </h1>
-
           </div>
         </header>
 
@@ -176,6 +265,10 @@ export function SubmitMixPage() {
                     YouTube, SoundCloud, or Mixcloud only.
                   </FormDescription>
                   <FormMessage />
+
+                  {linkMatch && (
+                    <ExistingMixSuggestion match={linkMatch} reason="link" />
+                  )}
 
                   {canPreview && isPreviewLoading && (
                     <p className="text-muted-foreground pt-2 text-sm">
@@ -215,6 +308,12 @@ export function SubmitMixPage() {
                     />
                   </FormControl>
                   <FormMessage />
+                  {distinctTitleMatch && (
+                    <ExistingMixSuggestion
+                      match={distinctTitleMatch}
+                      reason="title"
+                    />
+                  )}
                 </FormItem>
               )}
             />
@@ -322,7 +421,10 @@ export function SubmitMixPage() {
             />
 
             <div className="flex items-center gap-3 pt-2">
-              <Button type="submit" disabled={isSubmitting}>
+              <Button
+                type="submit"
+                disabled={isSubmitting || hasBlockingDuplicate}
+              >
                 {isSubmitting ? "Submitting…" : "Submit mix"}
               </Button>
               <Button

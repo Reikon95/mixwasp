@@ -12,6 +12,7 @@ import { SubmitMixPage } from "./SubmitMixPage" with { type: "ref" };
 import {
   browseMixes,
   createMix,
+  findExistingMix,
   getArtistMixes,
   getGenreMixes,
   getMixLinkPreview,
@@ -70,6 +71,9 @@ export const mixesSpec: Spec = [
     entities: ["Mix", "MixFavourite", "Artist", "Genre", "Tag"],
   }),
   query(getMixLinkPreview, {}),
+  query(findExistingMix, {
+    entities: ["Mix", "Artist"],
+  }),
   query(searchArtists, {
     entities: ["Artist"],
   }),

@@ -38,7 +38,7 @@ model Mix {
   id                       Int             @id @default(autoincrement())
   createdAt                DateTime        @default(now())
 
-  title                    String
+  title                    String          @unique
   artist                   Artist          @relation(fields: [artistId], references: [id])
   artistId                 Int
   link                     String          @unique
@@ -57,6 +57,7 @@ model Artist {
   createdAt                DateTime        @default(now())
 
   name                     String @unique
+  imageUrl                 String?
   mixes                    Mix[]
 }
 
