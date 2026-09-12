@@ -4,7 +4,7 @@ import { type EmailSender } from "@wasp.sh/spec";
 // server terminal (Wasp does NOT auto-fallback to Dummy when Resend fails).
 // Switch to "Resend" for production and set RESEND_API_KEY in `.env.server`.
 export const emailSender: EmailSender = {
-  provider: "Dummy",
+  provider: "Resend", // if building locally, use "Dummy"
   defaultFrom: {
     name: "MixWasp",
     email: "noreply@mixwasp.com",
