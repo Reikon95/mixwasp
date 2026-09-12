@@ -3,6 +3,7 @@ import { HttpError, type PrismaClient } from "wasp/server";
 import type {
   BrowseMixes,
   CreateMix,
+  FindExistingMix,
   GetArtistMixes,
   GetGenreMixes,
   GetMixLinkPreview,
@@ -21,6 +22,7 @@ import { ensureArgsSchemaOrThrowHttpError } from "../server/validation";
 import {
   browseMixesInputSchema,
   createMixInputSchema,
+  findExistingMixInputSchema,
   getArtistMixesInputSchema,
   getGenreMixesInputSchema,
   getMixLinkPreviewInputSchema,
@@ -36,6 +38,9 @@ import {
   type ArtistMixesResult,
   type BrowseMixesInput,
   type CreateMixInput,
+  type ExistingMixMatch,
+  type FindExistingMixInput,
+  type FindExistingMixResult,
   type GenreMixesResult,
   type GetArtistMixesInput,
   type GetGenreMixesInput,
@@ -142,6 +147,42 @@ const mixInclude = {
   tags: true,
 } as const;
 
+async function loadExistingMixMatch(
+  mixDelegate: PrismaClient["mix"],
+  where: { link: string } | { title: { equals: string; mode: "insensitive" } },
+): Promise<ExistingMixMatch | null> {
+  return mixDelegate.findFirst({
+    where,
+    include: { artist: true },
+  });
+}
+
+export const findExistingMix: FindExistingMix<
+  FindExistingMixInput,
+  FindExistingMixResult
+> = async (rawArgs, context) => {
+  const { title, link } = ensureArgsSchemaOrThrowHttpError(
+    findExistingMixInputSchema,
+    rawArgs ?? {},
+  );
+
+  const trimmedTitle = title?.trim();
+  const trimmedLink = link?.trim();
+
+  const [linkMatch, titleMatch] = await Promise.all([
+    trimmedLink
+      ? loadExistingMixMatch(context.entities.Mix, { link: trimmedLink })
+      : Promise.resolve(null),
+    trimmedTitle
+      ? loadExistingMixMatch(context.entities.Mix, {
+          title: { equals: trimmedTitle, mode: "insensitive" },
+        })
+      : Promise.resolve(null),
+  ]);
+
+  return { linkMatch, titleMatch };
+};
+
 export const createMix: CreateMix<CreateMixInput, CreatedMix> = async (
   rawArgs,
   context,
@@ -151,6 +192,26 @@ export const createMix: CreateMix<CreateMixInput, CreatedMix> = async (
   }
 
   const args = ensureArgsSchemaOrThrowHttpError(createMixInputSchema, rawArgs);
+
+  const linkMatch = await loadExistingMixMatch(context.entities.Mix, {
+    link: args.link,
+  });
+  if (linkMatch) {
+    throw new HttpError(
+      409,
+      `This link is already on MixWasp as "${linkMatch.title}" by ${linkMatch.artist.name}`,
+    );
+  }
+
+  const titleMatch = await loadExistingMixMatch(context.entities.Mix, {
+    title: { equals: args.title, mode: "insensitive" },
+  });
+  if (titleMatch) {
+    throw new HttpError(
+      409,
+      `A mix titled "${titleMatch.title}" by ${titleMatch.artist.name} already exists`,
+    );
+  }
 
   const artist = await findOrCreateArtistByName(
     args.artistName,
